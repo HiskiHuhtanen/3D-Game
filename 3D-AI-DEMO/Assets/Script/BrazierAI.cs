@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -11,6 +12,9 @@ public class BrazierAI : MonoBehaviour
     public float rollDistance = 5f;
     public float rollDuration = 1.5f;
     public float postRollWaitTime = 1f;
+
+    public GameObject fire;
+    public float fireGap;
 
     public AudioClip deathSound;
 
@@ -71,6 +75,8 @@ public class BrazierAI : MonoBehaviour
         float elapsedTime = 0f;
         Vector3 startPosition = transform.position;
 
+        StartCoroutine(SpawnFireTrail());
+
         // Move towards rollTarget over rollDuration time
         while (elapsedTime < rollDuration)
         {
@@ -87,6 +93,15 @@ public class BrazierAI : MonoBehaviour
         isAttacking = false;
         agent.isStopped = false;
         agent.speed = 3.5f;
+    }
+
+    private IEnumerator SpawnFireTrail()
+    {
+        while (isJumping || isAttacking)
+        {
+            Instantiate(fire, transform.position - transform.forward * 0.5f, Quaternion.identity); //quaternionit pelottaa
+            yield return new WaitForSeconds(fireGap);
+        }
     }
 
     public void TakeDamage(float damage)
