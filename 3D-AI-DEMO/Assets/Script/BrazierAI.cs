@@ -63,6 +63,7 @@ public class BrazierAI : MonoBehaviour
         agent.acceleration = 0; //tämäkin siis
 
         Vector3 rollDirection = (player.position - transform.position).normalized;
+        rollDirection.y = 0; //ei lennä enää, hajoaa myöhemmin kyllä
         rollTarget = transform.position + rollDirection * rollDistance;
         animator.SetTrigger("Jump");
 
@@ -99,7 +100,8 @@ public class BrazierAI : MonoBehaviour
     {
         while (isJumping || isAttacking)
         {
-            Instantiate(fire, transform.position - transform.forward * 0.5f, Quaternion.identity); //quaternionit pelottaa
+            GameObject fireCopy = Instantiate(fire, transform.position - transform.forward * 0.5f, Quaternion.identity); //quaternionit pelottaa
+            Destroy(fireCopy, 5);
             yield return new WaitForSeconds(fireGap);
         }
     }
