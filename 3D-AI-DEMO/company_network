@@ -1,0 +1,24 @@
+digraph "Company Network" {
+	rankdir=TB
+	"Core Switch" [label="Layer 3 Core Switch" fillcolor=lightblue shape=box style=filled]
+	"Admin Switch" [label="Admin Access Switch" fillcolor=lightgray shape=box style=filled]
+	"Office PCs" [label="Office Workstations + Docking Stations" shape=ellipse]
+	"Meeting Room" [label="Meeting Room (4K Video System)" shape=ellipse]
+	Lobby [label="Lobby (Reception PC, Printer, 4K Display)" shape=ellipse]
+	"WiFi APs" [label="Wi-Fi 6 Access Points" shape=ellipse]
+	"Industrial Switch" [label="Industrial Switch (Fiber 10GbE)" fillcolor=lightgray shape=box style=filled]
+	Machines [label="Industrial Machines (8x)" shape=ellipse]
+	Servers [label="Rack-mounted Servers (8x)" fillcolor=lightyellow shape=box style=filled]
+	Firewall [label=Firewall fillcolor=orange shape=box style=filled]
+	Internet [label="Internet (External)" fillcolor=red shape=ellipse style=filled]
+	"Core Switch" -> "Admin Switch"
+	"Core Switch" -> "Industrial Switch"
+	"Core Switch" -> Servers
+	Servers -> Firewall
+	Firewall -> Internet
+	"Admin Switch" -> "Office PCs"
+	"Admin Switch" -> "Meeting Room"
+	"Admin Switch" -> Lobby
+	"Admin Switch" -> "WiFi APs"
+	"Industrial Switch" -> Machines
+}
