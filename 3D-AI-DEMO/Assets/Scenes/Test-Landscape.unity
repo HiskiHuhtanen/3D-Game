@@ -1829,8 +1829,9 @@ MonoBehaviour:
   fire: {fileID: 1322652740}
   runDistance: 10
   walkDistance: 5
-  attackRange: 4
+  attackRange: 10
   rangedAttackRange: 20
+  canPunch: 1
 --- !u!1001 &624900243
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2424,6 +2425,7 @@ MonoBehaviour:
   walkDistance: 5
   attackRange: 10
   rangedAttackRange: 20
+  canPunch: 1
 --- !u!1 &961019062
 GameObject:
   m_ObjectHideFlags: 0

@@ -18,6 +18,7 @@ public class EliteAI : MonoBehaviour
     public float attackRange = 4f;   
     public float rangedAttackRange = 20f; 
     private bool isAttacking = false;
+    public bool canPunch = true;
 
     void Start()
     {
@@ -38,13 +39,12 @@ public class EliteAI : MonoBehaviour
 
         agent.SetDestination(player.position);
 
-        if (distanceToPlayer <= attackRange) 
+        if (distanceToPlayer <= attackRange && canPunch) 
         {
             StartCoroutine(Punch());
         }
         else if (distanceToPlayer <= rangedAttackRange) 
         {
-            // 50% chance to do ranged attack if both attacks are possible
             //EI tämä tee enää mitään järkee!!!, poista....
             if (distanceToPlayer <= rangedAttackRange && rangeCooldown == 0) 
             {
@@ -57,37 +57,33 @@ public class EliteAI : MonoBehaviour
     {
     Debug.Log("Punch coroutine started");
     isAttacking = true;
+    canPunch = false;
 
-    // First teleport outward (left or right) with a greater distance
-    Debug.Log("First teleport outward...");
     animator.SetBool("isDashing", true);
-    Vector3 firstDashDirection = Random.Range(0, 2) == 0 ? transform.right : -transform.right;
-    Vector3 firstDashPosition = transform.position + firstDashDirection * 6f; // Increase outward teleport distance
+
+    Vector3 firstDashDirection = (transform.forward + transform.right).normalized;
+    Vector3 firstDashPosition = transform.position + firstDashDirection * 6f; 
     transform.position = firstDashPosition;
     yield return new WaitForSeconds(0.5f);
 
-    // Second teleport inward towards the player with a greater distance
-    Debug.Log("Second teleport inward towards player...");
     Vector3 directionToPlayer = (player.transform.position - firstDashPosition).normalized;
-    Vector3 secondDashPosition = firstDashPosition + directionToPlayer * 8f; // Increase inward teleport distance
+    Vector3 secondDashPosition = player.transform.position + directionToPlayer * -2f;
     transform.position = secondDashPosition;
-    yield return new WaitForSeconds(0.5f);
+    //yield return new WaitForSeconds(0.5f);
 
     animator.SetBool("isDashing", false);
     animator.SetBool("isPunching", true);
-
-    // Stop agent for attack
-    Debug.Log("Stopping agent for attack...");
     agent.isStopped = true; 
-    yield return new WaitForSeconds(3f);
+    yield return new WaitForSeconds(2f);
 
     animator.SetBool("isPunching", false);
 
-    // Resume movement
-    Debug.Log("Attack complete, resuming movement...");
     agent.isStopped = false;
     isAttacking = false;
+    //miksi näin???? eikä vaa rangeCooldown -= 1
     rangeCooldown = Mathf.Max(rangeCooldown - 1, 0);
+    yield return new WaitForSeconds(4f);
+    canPunch = true;
     }
 
     private IEnumerator FireAttack()
