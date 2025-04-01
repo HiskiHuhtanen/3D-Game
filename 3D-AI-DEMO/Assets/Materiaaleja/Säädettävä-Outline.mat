@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: New Material
+  m_Name: "S\xE4\xE4dett\xE4v\xE4-Outline"
   m_Shader: {fileID: 4800000, guid: bd2412fd84ef9544ca4725e0e5da551a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -26,7 +26,7 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _OutlineWidth: 0.0302
+    - _OutlineWidth: 0.0258
     m_Colors:
     - _OutlineColor: {r: 0.8679245, g: 0.20862237, b: 0.08597365, a: 1}
   m_BuildTextureStacks: []

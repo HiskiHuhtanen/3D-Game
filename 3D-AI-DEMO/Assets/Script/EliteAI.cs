@@ -138,9 +138,9 @@ public class EliteAI : MonoBehaviour
         float angleStep = 360f / pairs;
         float currentRotation = 0f;
         int attackRepeats = 3;
-        int fireSpawnCount = 5;
+        int fireSpawnCount = 10;
         float minSpinTime = 1.5f;
-        float maxSpinTime = 3f;
+        float maxSpinTime = 5f;
 
         for (int i = 0; i < pairs; i++)
         {
@@ -194,33 +194,32 @@ public class EliteAI : MonoBehaviour
     //ei hirveän järkevä ratkaisu, jos haluaisi sienon efektin
     private void SpawnFire(GameObject[] lines, int fireCount)
     {
-        Debug.Log("TULTAAAAAAAAAA!!!!!!");
-        List<Vector3> firePositions = new List<Vector3>();
-
-        for (int i = 0; i < lines.Length; i += 2) // Each pair of lines
+        for (int i = 0; i < lines.Length; i += 2) // Each pair of parallel lines
         {
             if (lines[i] == null || lines[i + 1] == null) continue;
 
-            Vector3 start = lines[i].transform.position;
-            Vector3 end = lines[i + 1].transform.position;
+            Vector3 line1Pos = lines[i].transform.position;
+            Vector3 line2Pos = lines[i + 1].transform.position;
 
-            // Find the direction vector perpendicular to the lines
-            Vector3 midPoint = (start + end) / 2f; // Center between the two lines
-            Vector3 perpendicular = (end - start).normalized; // Direction between the lines
-            Vector3 spreadDirection = Vector3.Cross(perpendicular, Vector3.up); // Perpendicular to it
+            // Midpoint between the two lines
+            Vector3 centerPos = (line1Pos + line2Pos) / 2f;
+
+            // Direction of fire spread (same as FireAttack)
+            Vector3 forwardDirection = transform.forward; 
+
+            Vector3 parallelDirection = (line2Pos - line1Pos).normalized;
+            Vector3 perpendicularSpread = Vector3.Cross(parallelDirection, Vector3.up).normalized;
+
+            float fireSpacing = 2.0f; // Adjust to change fire spread
+            //Quaternion fireRotation = Quaternion.LookRotation(forwardDirection) * Quaternion.Euler(0, 90, 0);
+            Quaternion fireRotation = Quaternion.LookRotation(parallelDirection);
 
             for (int j = 0; j < fireCount; j++)
             {
-                float offset = ((j - (fireCount / 2f)) / fireCount) * (Vector3.Distance(start, end)); 
-                Vector3 firePos = midPoint + spreadDirection * offset; // Spread along perpendicular axis
-                firePositions.Add(firePos);
+                float offset = (j + 1) * fireSpacing - (Vector3.Distance(line1Pos, line2Pos) / 2);
+                Vector3 fireSpawnPos = centerPos + perpendicularSpread * offset;
+                Instantiate(explosion, fireSpawnPos, fireRotation);
             }
-        }
-
-        // Spawn fire effects at calculated positions
-        foreach (Vector3 pos in firePositions)
-        {
-            Instantiate(explosion, pos, Quaternion.identity);
         }
     }
 }
