@@ -56,6 +56,7 @@ public class BrazierAI : MonoBehaviour
 
     private IEnumerator JumpAndRollAttack()
     {
+        float rollDurationCopy = rollDuration;
         isJumping = true;
         isAttacking = true;
         agent.isStopped = true;
@@ -63,8 +64,26 @@ public class BrazierAI : MonoBehaviour
         agent.acceleration = 0; //tämäkin siis
 
         Vector3 rollDirection = (player.position - transform.position).normalized;
+        Vector3 bounceDirection;
         rollDirection.y = 0; //ei lennä enää, hajoaa myöhemmin kyllä
         rollTarget = transform.position + rollDirection * rollDistance;
+        Vector3 bounceTarget = (player.position - transform.position).normalized; //lol, otin vain näin ettei valita
+        bool hitObstacle = false;
+
+        if (Physics.Raycast(transform.position, rollDirection, out RaycastHit hit, rollDistance))
+        {
+            float surfaceAngle = Vector3. Angle(Vector3.up, hit.normal);
+            if (surfaceAngle > 30f)
+            {
+                hitObstacle = true;
+                rollTarget = hit.point;
+                Vector3 normal = hit.normal;
+                bounceDirection = Vector3.Reflect(rollDirection, normal);
+                bounceTarget = transform.position + bounceDirection * (rollDistance / 2f);
+            }
+
+        }
+
         animator.SetTrigger("Jump");
 
         yield return new WaitForSeconds(1f);
@@ -78,15 +97,32 @@ public class BrazierAI : MonoBehaviour
 
         StartCoroutine(SpawnFireTrail());
 
-        // Move towards rollTarget over rollDuration time
-        while (elapsedTime < rollDuration)
+        if (hitObstacle)
         {
-            transform.position = Vector3.Lerp(startPosition, rollTarget, elapsedTime / rollDuration);
+            rollDurationCopy = rollDurationCopy / 2f;
+        }
+
+        // Move towards rollTarget over rollDuration time
+        while (elapsedTime < rollDurationCopy)
+        {
+            transform.position = Vector3.Lerp(startPosition, rollTarget, elapsedTime / rollDurationCopy);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
         transform.position = rollTarget;
+        if (hitObstacle)
+        {
+            elapsedTime = 0f;
+            startPosition = rollTarget;
+            while (elapsedTime < rollDurationCopy)
+            {
+                transform.position = Vector3.Lerp(startPosition, bounceTarget, elapsedTime / rollDurationCopy);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+            transform.position = bounceTarget;
+        }
         yield return new WaitForSeconds(postRollWaitTime);
 
 

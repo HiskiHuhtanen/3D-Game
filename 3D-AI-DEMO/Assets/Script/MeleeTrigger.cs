@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
@@ -17,11 +18,16 @@ public class MeleeTrigger : MonoBehaviour
     private Animator animator;
     private bool isAttacking = false;
 
+    public Material dissolveMaterial;
+    public float dissolveSpeed = 1f;
+    private float dissolveAmount = -1f;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
+        dissolveMaterial = GetComponentInChildren<SkinnedMeshRenderer>().material;
     }
 
     void Update()
@@ -100,7 +106,22 @@ public class MeleeTrigger : MonoBehaviour
     public void Die()
     {   
         PlayDeathSound();
-        Destroy(gameObject, deathSound.length);
+        StartCoroutine(DissolveEffect());
+    }
+
+    IEnumerator DissolveEffect()
+    {
+        while (dissolveAmount < 1f)
+        {
+            dissolveAmount += Time.deltaTime * dissolveSpeed;
+            Debug.Log("Dissolve Value: " + dissolveAmount);
+            dissolveMaterial.SetFloat("_DissolveAmount", dissolveAmount);
+            Debug.Log("Dissolve Value: " + dissolveAmount);
+            yield return null;
+        }
+
+        Destroy(gameObject);
+
     }
 
     private void PlayDeathSound()
