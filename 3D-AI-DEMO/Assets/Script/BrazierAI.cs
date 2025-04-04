@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,8 +11,10 @@ public class BrazierAI : MonoBehaviour
     public float health = 1f;
     public float rollSpeed = 10f;
     public float rollDistance = 5f;
-    public float rollDuration = 1.5f;
     public float postRollWaitTime = 1f;
+    public float wanderRadius = 5f;
+    public float wanderCooldown = 3f;
+    public float aggroRange  = 10f;
 
     public GameObject fire;
     public float fireGap;
@@ -24,6 +27,8 @@ public class BrazierAI : MonoBehaviour
 
     private bool isAttacking = false;
     private bool isJumping = false;
+    private bool hasAggro = false;
+    private float wanderTimer = 0f;
     private Vector3 rollTarget;
 
     void Start()
@@ -35,7 +40,14 @@ public class BrazierAI : MonoBehaviour
 
     void Update()
     {
-        if (!isAttacking && !isJumping)
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        if (!hasAggro && distanceToPlayer <= aggroRange)
+        {
+            hasAggro = true;
+        }
+
+
+        if (hasAggro && !isAttacking && !isJumping)
         {
             agent.destination = player.position;
 
@@ -44,7 +56,22 @@ public class BrazierAI : MonoBehaviour
                 animator.SetTrigger("Run");
             }
         }
+        else if (!hasAggro && !isAttacking && !isJumping)
+        {
+            wanderTimer += Time.deltaTime;
+            if (wanderTimer >= wanderCooldown)
+            {
+                Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
+                agent.SetDestination(newPos);
+                wanderTimer = 0f;
+            }
+            if (agent.velocity.magnitude > 0.1f)
+            {
+                animator.SetTrigger("Run");
+            }
+        }
     }
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -56,7 +83,6 @@ public class BrazierAI : MonoBehaviour
 
     private IEnumerator JumpAndRollAttack()
     {
-        float rollDurationCopy = rollDuration;
         isJumping = true;
         isAttacking = true;
         agent.isStopped = true;
@@ -64,10 +90,11 @@ public class BrazierAI : MonoBehaviour
         agent.acceleration = 0; //tämäkin siis
 
         Vector3 rollDirection = (player.position - transform.position).normalized;
-        Vector3 bounceDirection;
         rollDirection.y = 0; //ei lennä enää, hajoaa myöhemmin kyllä
         rollTarget = transform.position + rollDirection * rollDistance;
-        Vector3 bounceTarget = (player.position - transform.position).normalized; //lol, otin vain näin ettei valita
+
+        Vector3 bounceTarget = (player.position - transform.position).normalized; //lol, otin vain näin ettei valita, tämä ei siis tarkoita mitää, en osannu vaa tehä sitä null:iksi :D
+        Vector3 bounceDirection = (player.position - transform.position).normalized;
         bool hitObstacle = false;
 
         if (Physics.Raycast(transform.position, rollDirection, out RaycastHit hit, rollDistance))
@@ -79,7 +106,6 @@ public class BrazierAI : MonoBehaviour
                 rollTarget = hit.point;
                 Vector3 normal = hit.normal;
                 bounceDirection = Vector3.Reflect(rollDirection, normal);
-                bounceTarget = transform.position + bounceDirection * (rollDistance / 2f);
             }
 
         }
@@ -92,37 +118,20 @@ public class BrazierAI : MonoBehaviour
 
         animator.SetTrigger("Roll");
 
-        float elapsedTime = 0f;
-        Vector3 startPosition = transform.position;
+        Coroutine fireTrailRoutine = StartCoroutine(SpawnFireTrail());
+        
+        yield return MoveAtConstantSpeed(transform.position, rollTarget, rollSpeed);
 
-        StartCoroutine(SpawnFireTrail());
+        StopCoroutine(SpawnFireTrail());
 
         if (hitObstacle)
         {
-            rollDurationCopy = rollDurationCopy / 2f;
+            bounceTarget = rollTarget + bounceDirection * (rollDistance / 2f);
+            yield return MoveAtConstantSpeed(rollTarget, bounceTarget, rollSpeed);
         }
 
-        // Move towards rollTarget over rollDuration time
-        while (elapsedTime < rollDurationCopy)
-        {
-            transform.position = Vector3.Lerp(startPosition, rollTarget, elapsedTime / rollDurationCopy);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
+        StopCoroutine(fireTrailRoutine);
 
-        transform.position = rollTarget;
-        if (hitObstacle)
-        {
-            elapsedTime = 0f;
-            startPosition = rollTarget;
-            while (elapsedTime < rollDurationCopy)
-            {
-                transform.position = Vector3.Lerp(startPosition, bounceTarget, elapsedTime / rollDurationCopy);
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            transform.position = bounceTarget;
-        }
         yield return new WaitForSeconds(postRollWaitTime);
 
 
@@ -130,6 +139,22 @@ public class BrazierAI : MonoBehaviour
         isAttacking = false;
         agent.isStopped = false;
         agent.speed = 3.5f;
+    }
+
+    private IEnumerator MoveAtConstantSpeed(Vector3 start, Vector3 end, float speed)
+    {
+        float distance = Vector3.Distance(start, end);
+        float travelTime = distance / speed;
+        float elapsedTime = 0f;
+        
+        while (elapsedTime < travelTime)
+        {
+            transform.position = Vector3.Lerp(start, end, elapsedTime / travelTime);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        transform.position = end;
     }
 
     private IEnumerator SpawnFireTrail()
@@ -140,6 +165,16 @@ public class BrazierAI : MonoBehaviour
             Destroy(fireCopy, 5);
             yield return new WaitForSeconds(fireGap);
         }
+    }
+
+    //tekoäly koodia
+    public static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
+    {
+        Vector3 randDirection = UnityEngine.Random.insideUnitSphere * dist;
+        randDirection += origin;
+        NavMeshHit navHit;
+        NavMesh.SamplePosition(randDirection, out navHit, dist, layermask);
+        return navHit.position;
     }
 
     public void TakeDamage(float damage)

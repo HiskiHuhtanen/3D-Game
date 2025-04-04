@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+
+//sisältää PALJON turhia rivejä, oletan, en ole tarkistanut
+//muutenkin nykyinen toiminta ja rakenne on hieman outo.
+
 public class EliteAI : MonoBehaviour
 {
     public Transform player;
@@ -23,7 +27,7 @@ public class EliteAI : MonoBehaviour
     public float attackRange = 4f;   
     public float rangedAttackRange = 20f; 
     private bool isAttacking = false;
-    public bool canPunch = true;
+    public bool canPunch = true; //muuta nimi jossain vaiheessa globaaliksi attackCooldowniksi
 
     void Start()
     {
@@ -31,11 +35,10 @@ public class EliteAI : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    //gpt koodia, oma ei toiminut
-    //tiedän miksi, en jaksanut korjata
+    //ei toimi, tiedän miksi, en jaksanut korjata
     //kello on yö.
 
-    //hahaaa! ei enää
+    //hahaaa! ei enää!
     void Update()
     {
         if (isAttacking) return; 
@@ -50,7 +53,7 @@ public class EliteAI : MonoBehaviour
         {
             StartCoroutine(Punch());
         }
-        else if (distanceToPlayer <= rangedAttackRange) 
+        else if (distanceToPlayer <= rangedAttackRange && canPunch) 
         {
             if (distanceToPlayer <= rangedAttackRange && rangeCooldown == 0) 
             {
@@ -69,7 +72,6 @@ public class EliteAI : MonoBehaviour
 
     private IEnumerator Punch()
     {
-    Debug.Log("Punch coroutine started");
     isAttacking = true;
     canPunch = false;
 
@@ -102,6 +104,7 @@ public class EliteAI : MonoBehaviour
 
     private IEnumerator FireAttack()
     {
+        canPunch = false;
         isAttacking = true;
         agent.isStopped = true;
         animator.SetBool("isRanged", true);
@@ -121,16 +124,20 @@ public class EliteAI : MonoBehaviour
         agent.isStopped = false;
         isAttacking = false;
         rangedAttackCounter += 1;
-        Debug.Log(rangedAttackCounter);
+        yield return new WaitForSeconds(3f);
+        canPunch = true;
+
     }
 
     //HOX HOX! Gpt auttoi tässä matikassa
     private IEnumerator SpinAttack()
     {
+        canPunch = false;
         isAttacking = true;
         agent.isStopped = true;
         Debug.Log("SPIIIIN");
 
+        //näitä voisi ehkä siirtää publiciksi
         int pairs = 8;
         float lineDistance = 5f;
         float rotationSpeed = 45f;
@@ -184,6 +191,8 @@ public class EliteAI : MonoBehaviour
 
         agent.isStopped = false;
         isAttacking = false;
+        yield return new WaitForSeconds(4f);
+        canPunch = true;
         
     }
 
