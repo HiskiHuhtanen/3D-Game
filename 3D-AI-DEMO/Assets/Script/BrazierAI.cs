@@ -58,13 +58,12 @@ public class BrazierAI : MonoBehaviour
         }
         else if (!hasAggro && !isAttacking && !isJumping)
         {
-            wanderTimer += Time.deltaTime;
-            if (wanderTimer >= wanderCooldown)
+            if (!agent.hasPath || agent.remainingDistance < 1f)
             {
                 Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
                 agent.SetDestination(newPos);
-                wanderTimer = 0f;
             }
+
             if (agent.velocity.magnitude > 0.1f)
             {
                 animator.SetTrigger("Run");
@@ -99,15 +98,17 @@ public class BrazierAI : MonoBehaviour
 
         if (Physics.Raycast(transform.position, rollDirection, out RaycastHit hit, rollDistance))
         {
-            float surfaceAngle = Vector3. Angle(Vector3.up, hit.normal);
-            if (surfaceAngle > 30f)
+            if (!hit.collider.CompareTag("Enemy"))
             {
-                hitObstacle = true;
-                rollTarget = hit.point;
-                Vector3 normal = hit.normal;
-                bounceDirection = Vector3.Reflect(rollDirection, normal);
+                float surfaceAngle = Vector3. Angle(Vector3.up, hit.normal);
+                if (surfaceAngle > 30f)
+                {
+                    hitObstacle = true;
+                    rollTarget = hit.point;
+                    Vector3 normal = hit.normal;
+                    bounceDirection = Vector3.Reflect(rollDirection, normal);
+                }               
             }
-
         }
 
         animator.SetTrigger("Jump");
