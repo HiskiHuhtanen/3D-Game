@@ -1,10 +1,11 @@
 using System;
 using System.Collections;
+using TMPro;
 using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class BrazierAI : MonoBehaviour
+public class BrazierAI : MonoBehaviour, IDamageable
 {
     public Transform player;
     public float attackCooldown = 1.5f;
@@ -18,6 +19,7 @@ public class BrazierAI : MonoBehaviour
 
     public GameObject fire;
     public float fireGap;
+    public Material dissolveMat;
 
     public AudioClip deathSound;
 
@@ -28,24 +30,62 @@ public class BrazierAI : MonoBehaviour
     private bool isAttacking = false;
     private bool isJumping = false;
     private bool hasAggro = false;
-    private float wanderTimer = 0f;
     private Vector3 rollTarget;
+    private float dissolveValue = -1f;
+    private float dissolveSpeed = 1f;
+    private Material _instanceMaterial;
+    private bool isDissolving = false;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
+
+        if (dissolveMat != null)
+        {
+            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
+            if (meshRenderer != null)
+            {
+                Material originalMat = meshRenderer.material;
+                _instanceMaterial = new Material(dissolveMat);
+
+                // Copy textures and color from original material
+                if (originalMat.HasProperty("_BaseMap"))
+                    _instanceMaterial.SetTexture("_BaseMap", originalMat.GetTexture("_BaseMap"));
+                if (originalMat.HasProperty("_NormalMap"))
+                    _instanceMaterial.SetTexture("_NormalMap", originalMat.GetTexture("_NormalMap"));
+                if (originalMat.HasProperty("_EmissionMap"))
+                    _instanceMaterial.SetTexture("_EmissionMap", originalMat.GetTexture("_EmissionMap"));
+                if (originalMat.HasProperty("_Color"))
+                    _instanceMaterial.SetColor("_Color", originalMat.GetColor("_Color"));
+                if (originalMat.IsKeywordEnabled("_EMISSION"))
+                    _instanceMaterial.EnableKeyword("_EMISSION");
+
+                _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
+
+                meshRenderer.material = _instanceMaterial;
+            }
+            else
+            {
+                Debug.LogWarning("EII TOIMI! (SkinnedMeshRenderer not found)");
+            }
+        }
     }
 
     void Update()
     {
+        if (isDissolving && _instanceMaterial != null)
+        {
+            dissolveValue += Time.deltaTime * dissolveSpeed;
+            _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
+        }
+
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         if (!hasAggro && distanceToPlayer <= aggroRange)
         {
             hasAggro = true;
         }
-
 
         if (hasAggro && !isAttacking && !isJumping)
         {
@@ -70,7 +110,6 @@ public class BrazierAI : MonoBehaviour
             }
         }
     }
-
 
     private void OnTriggerEnter(Collider other)
     {
@@ -100,7 +139,7 @@ public class BrazierAI : MonoBehaviour
         {
             if (!hit.collider.CompareTag("Enemy"))
             {
-                float surfaceAngle = Vector3. Angle(Vector3.up, hit.normal);
+                float surfaceAngle = Vector3.Angle(Vector3.up, hit.normal);
                 if (surfaceAngle > 30f)
                 {
                     hitObstacle = true;
@@ -134,7 +173,6 @@ public class BrazierAI : MonoBehaviour
         StopCoroutine(fireTrailRoutine);
 
         yield return new WaitForSeconds(postRollWaitTime);
-
 
         isJumping = false;
         isAttacking = false;
@@ -189,8 +227,17 @@ public class BrazierAI : MonoBehaviour
 
     public void Die()
     {
+        agent.isStopped = true;
         PlayDeathSound();
-        Destroy(gameObject, deathSound.length);
+        if (_instanceMaterial != null)
+        {
+            isDissolving = true;
+            Destroy(gameObject, 2.5f);
+        }
+        else
+        {
+            Destroy(gameObject, deathSound.length);
+        }
     }
 
     private void PlayDeathSound()

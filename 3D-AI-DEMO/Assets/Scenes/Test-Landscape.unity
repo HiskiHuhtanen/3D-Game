@@ -8862,6 +8862,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: blazierhead_animated_more_3
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: bc427178b228dbe4c995381055774d96, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: bc427178b228dbe4c995381055774d96, type: 3}
       propertyPath: m_Controller
       value: 
