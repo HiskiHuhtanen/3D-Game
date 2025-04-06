@@ -196,14 +196,12 @@ public class EliteAI : MonoBehaviour
         
     }
 
-    //TÄMÄ EI TOIMI
-    //KYLLÄ POHJA OLI VAA TEKOÄLYLTÄ, PARANNAN KUN JAKSAN
     //eli idea olisi luoda 5 tyhjää gameobjectia viivojen sisälle
-    //tasoittaa ne eriin toisiistan ja sit spawnata tuli niihin
+    //tasoittaa ne erille toisiistan ja sit spawnata tuli niihin
     //ei hirveän järkevä ratkaisu, jos haluaisi sienon efektin
     private void SpawnFire(GameObject[] lines, int fireCount)
     {
-        for (int i = 0; i < lines.Length; i += 2) // Each pair of parallel lines
+        for (int i = 0; i < lines.Length; i += 2)
         {
             if (lines[i] == null || lines[i + 1] == null) continue;
 
@@ -212,15 +210,10 @@ public class EliteAI : MonoBehaviour
 
             // Midpoint between the two lines
             Vector3 centerPos = (line1Pos + line2Pos) / 2f;
-
-            // Direction of fire spread (same as FireAttack)
-            Vector3 forwardDirection = transform.forward; 
-
             Vector3 parallelDirection = (line2Pos - line1Pos).normalized;
             Vector3 perpendicularSpread = Vector3.Cross(parallelDirection, Vector3.up).normalized;
 
-            float fireSpacing = 2.0f; // Adjust to change fire spread
-            //Quaternion fireRotation = Quaternion.LookRotation(forwardDirection) * Quaternion.Euler(0, 90, 0);
+            float fireSpacing = 2.0f;
             Quaternion fireRotation = Quaternion.LookRotation(parallelDirection);
 
             for (int j = 0; j < fireCount; j++)

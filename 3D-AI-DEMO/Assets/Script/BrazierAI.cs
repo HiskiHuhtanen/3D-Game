@@ -76,7 +76,8 @@ public class BrazierAI : MonoBehaviour, IDamageable
     void Update()
     {
         if (isDissolving && _instanceMaterial != null)
-        {
+        { 
+            agent.isStopped = true;
             dissolveValue += Time.deltaTime * dissolveSpeed;
             _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
         }
@@ -131,7 +132,6 @@ public class BrazierAI : MonoBehaviour, IDamageable
         rollDirection.y = 0; //ei lennä enää, hajoaa myöhemmin kyllä
         rollTarget = transform.position + rollDirection * rollDistance;
 
-        Vector3 bounceTarget = (player.position - transform.position).normalized; //lol, otin vain näin ettei valita, tämä ei siis tarkoita mitää, en osannu vaa tehä sitä null:iksi :D
         Vector3 bounceDirection = (player.position - transform.position).normalized;
         bool hitObstacle = false;
 
@@ -166,7 +166,7 @@ public class BrazierAI : MonoBehaviour, IDamageable
 
         if (hitObstacle)
         {
-            bounceTarget = rollTarget + bounceDirection * (rollDistance / 2f);
+            Vector3 bounceTarget = rollTarget + bounceDirection * (rollDistance / 2f);
             yield return MoveAtConstantSpeed(rollTarget, bounceTarget, rollSpeed);
         }
 
