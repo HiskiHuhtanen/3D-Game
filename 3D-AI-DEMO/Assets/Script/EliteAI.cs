@@ -8,16 +8,19 @@ using UnityEngine.AI;
 //sisältää PALJON turhia rivejä, oletan, en ole tarkistanut
 //muutenkin nykyinen toiminta ja rakenne on hieman outo.
 
-public class EliteAI : MonoBehaviour
+public class EliteAI : MonoBehaviour, IDamageable
 {
     public Transform player;
     public GameObject fire;
     public GameObject warningLine;
     public GameObject explosion;
+    public AudioClip deathSound;
+    public float health = 1f;
     private int rangeCooldown = 0;
     private int rangedAttackCounter = 0;
     private NavMeshAgent agent;
     private Animator animator;
+    private AudioSource audioSource;
 
     public float runDistance = 10f;
     public float walkDistance = 5f;
@@ -28,11 +31,46 @@ public class EliteAI : MonoBehaviour
     public float rangedAttackRange = 20f; 
     private bool isAttacking = false;
     public bool canPunch = true; //muuta nimi jossain vaiheessa globaaliksi attackCooldowniksi
+    private float dissolveValue = -1f;
+    private float dissolveSpeed = 1f;
+    private Material _instanceMaterial;
+    private bool isDissolving = false;
+    public Material dissolveMat;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+
+        if (dissolveMat != null)
+        {
+            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
+            if (meshRenderer != null)
+            {
+                Material originalMat = meshRenderer.material;
+                _instanceMaterial = new Material(dissolveMat);
+
+                // Copy textures and color from original material
+                if (originalMat.HasProperty("_BaseMap"))
+                    _instanceMaterial.SetTexture("_BaseMap", originalMat.GetTexture("_BaseMap"));
+                if (originalMat.HasProperty("_NormalMap"))
+                    _instanceMaterial.SetTexture("_NormalMap", originalMat.GetTexture("_NormalMap"));
+                if (originalMat.HasProperty("_EmissionMap"))
+                    _instanceMaterial.SetTexture("_EmissionMap", originalMat.GetTexture("_EmissionMap"));
+                if (originalMat.HasProperty("_Color"))
+                    _instanceMaterial.SetColor("_Color", originalMat.GetColor("_Color"));
+                if (originalMat.IsKeywordEnabled("_EMISSION"))
+                    _instanceMaterial.EnableKeyword("_EMISSION");
+
+                _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
+
+                meshRenderer.material = _instanceMaterial;
+            }
+            else
+            {
+                Debug.LogWarning("EII TOIMI! (SkinnedMeshRenderer not found)");
+            }
+        }
     }
 
     //ei toimi, tiedän miksi, en jaksanut korjata
@@ -41,6 +79,12 @@ public class EliteAI : MonoBehaviour
     //hahaaa! ei enää!
     void Update()
     {
+        if (isDissolving)
+        {
+            agent.isStopped = true;
+            dissolveValue += Time.deltaTime * dissolveSpeed;
+            _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
+        }
         if (isAttacking) return; 
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
@@ -137,6 +181,11 @@ public class EliteAI : MonoBehaviour
         agent.isStopped = true;
         Debug.Log("SPIIIIN");
 
+        animator.SetTrigger("SpinStart");
+        yield return new WaitForSeconds(0.8f);
+
+        animator.SetBool("isSpinning" , true);
+
         //näitä voisi ehkä siirtää publiciksi
         int pairs = 8;
         float lineDistance = 5f;
@@ -183,6 +232,8 @@ public class EliteAI : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
 
+        animator.SetBool("isSpinning", false);
+
         for (int i = 0; i < lines.Length; i++)
         {
             if (lines[i] != null)
@@ -224,4 +275,80 @@ public class EliteAI : MonoBehaviour
             }
         }
     }
+    public void TakeDamage(float damage)
+    {
+        health -= damage;
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+
+    public void Die()
+    {
+        agent.isStopped = true;
+        isAttacking = true;
+        animator.SetBool("Death", true);
+        PlayDeathSound();
+
+        if (_instanceMaterial != null)
+        {
+            isDissolving = true;
+            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
+            if (meshRenderer != null)
+            {
+                meshRenderer.materials = new Material[] {_instanceMaterial};
+            }
+            StartCoroutine(Dissolve(5f , 5f));
+        }
+        else
+        {
+            Debug.Log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            Destroy(gameObject, deathSound.length);
+        }
+    }
+
+    private void PlayDeathSound()
+    {
+        if (audioSource && deathSound)
+        {
+            audioSource.PlayOneShot(deathSound);
+        }
+    }
+
+    private IEnumerator Dissolve(float delayBeforeDissolve, float dissolveDuration)
+    {
+        yield return new WaitForSeconds(delayBeforeDissolve);
+
+        float elapsed = 0f;
+        isDissolving = true;
+
+        SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
+        if (meshRenderer == null)
+        {
+            Debug.LogWarning("No SkinnedMeshRenderer found");
+            yield break;
+        }
+
+        Material[] materials = meshRenderer.materials;
+        while (elapsed < dissolveDuration)
+        {
+            float dissolveAmount = Mathf.Lerp(0f, 1f, elapsed / dissolveDuration);
+            foreach (var mat in materials)
+            {
+                if (mat.HasProperty("_DissolveAmount"))
+                    mat.SetFloat("_DissolveAmount", dissolveAmount);
+            }
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        foreach (var mat in materials)
+        {
+            if (mat.HasProperty("_DissolveAmount"))
+                mat.SetFloat("_DissolveAmount", 1f);
+        }
+        Destroy(gameObject);
+    }
+
 }

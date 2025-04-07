@@ -232,6 +232,11 @@ public class BrazierAI : MonoBehaviour, IDamageable
         if (_instanceMaterial != null)
         {
             isDissolving = true;
+            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
+            if (meshRenderer != null)
+            {
+                meshRenderer.materials = new Material[] {_instanceMaterial};
+            }
             Destroy(gameObject, 2.5f);
         }
         else
