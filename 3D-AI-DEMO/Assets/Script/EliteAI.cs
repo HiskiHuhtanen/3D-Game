@@ -31,45 +31,17 @@ public class EliteAI : MonoBehaviour, IDamageable
     public float rangedAttackRange = 20f; 
     private bool isAttacking = false;
     public bool canPunch = true; //muuta nimi jossain vaiheessa globaaliksi attackCooldowniksi
-    private float dissolveValue = -1f;
-    private float dissolveSpeed = 1f;
-    private Material _instanceMaterial;
-    private bool isDissolving = false;
-    public Material dissolveMat;
+
+    private DissolveController[] dissolveControllers;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-
-        if (dissolveMat != null)
+        dissolveControllers = GetComponentsInChildren<DissolveController>();
+        if (dissolveControllers.Length == 0)
         {
-            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
-            if (meshRenderer != null)
-            {
-                Material originalMat = meshRenderer.material;
-                _instanceMaterial = new Material(dissolveMat);
-
-                // Copy textures and color from original material
-                if (originalMat.HasProperty("_BaseMap"))
-                    _instanceMaterial.SetTexture("_BaseMap", originalMat.GetTexture("_BaseMap"));
-                if (originalMat.HasProperty("_NormalMap"))
-                    _instanceMaterial.SetTexture("_NormalMap", originalMat.GetTexture("_NormalMap"));
-                if (originalMat.HasProperty("_EmissionMap"))
-                    _instanceMaterial.SetTexture("_EmissionMap", originalMat.GetTexture("_EmissionMap"));
-                if (originalMat.HasProperty("_Color"))
-                    _instanceMaterial.SetColor("_Color", originalMat.GetColor("_Color"));
-                if (originalMat.IsKeywordEnabled("_EMISSION"))
-                    _instanceMaterial.EnableKeyword("_EMISSION");
-
-                _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
-
-                meshRenderer.material = _instanceMaterial;
-            }
-            else
-            {
-                Debug.LogWarning("EII TOIMI! (SkinnedMeshRenderer not found)");
-            }
+            Debug.LogError("No DissolveController components found on the EliteAI or its children.");
         }
     }
 
@@ -79,12 +51,6 @@ public class EliteAI : MonoBehaviour, IDamageable
     //hahaaa! ei enää!
     void Update()
     {
-        if (isDissolving)
-        {
-            agent.isStopped = true;
-            dissolveValue += Time.deltaTime * dissolveSpeed;
-            _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
-        }
         if (isAttacking) return; 
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
@@ -291,15 +257,13 @@ public class EliteAI : MonoBehaviour, IDamageable
         animator.SetBool("Death", true);
         PlayDeathSound();
 
-        if (_instanceMaterial != null)
+        if (dissolveControllers != null)
         {
-            isDissolving = true;
-            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
-            if (meshRenderer != null)
+            foreach (var dissolveController in dissolveControllers)
             {
-                meshRenderer.materials = new Material[] {_instanceMaterial};
+                Debug.Log("HAHHAHAHAHAaa dissolvea taas!!");
+                dissolveController.StartDissolve();
             }
-            StartCoroutine(Dissolve(5f , 5f));
         }
         else
         {
@@ -315,40 +279,4 @@ public class EliteAI : MonoBehaviour, IDamageable
             audioSource.PlayOneShot(deathSound);
         }
     }
-
-    private IEnumerator Dissolve(float delayBeforeDissolve, float dissolveDuration)
-    {
-        yield return new WaitForSeconds(delayBeforeDissolve);
-
-        float elapsed = 0f;
-        isDissolving = true;
-
-        SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
-        if (meshRenderer == null)
-        {
-            Debug.LogWarning("No SkinnedMeshRenderer found");
-            yield break;
-        }
-
-        Material[] materials = meshRenderer.materials;
-        while (elapsed < dissolveDuration)
-        {
-            float dissolveAmount = Mathf.Lerp(0f, 1f, elapsed / dissolveDuration);
-            foreach (var mat in materials)
-            {
-                if (mat.HasProperty("_DissolveAmount"))
-                    mat.SetFloat("_DissolveAmount", dissolveAmount);
-            }
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        foreach (var mat in materials)
-        {
-            if (mat.HasProperty("_DissolveAmount"))
-                mat.SetFloat("_DissolveAmount", 1f);
-        }
-        Destroy(gameObject);
-    }
-
 }

@@ -31,57 +31,18 @@ public class BrazierAI : MonoBehaviour, IDamageable
     private bool isJumping = false;
     private bool hasAggro = false;
     private Vector3 rollTarget;
-    private float dissolveValue = -1f;
-    private float dissolveSpeed = 1f;
-    private Material _instanceMaterial;
-    private bool isDissolving = false;
+    private DissolveController dissolveController;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
-
-        if (dissolveMat != null)
-        {
-            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
-            if (meshRenderer != null)
-            {
-                Material originalMat = meshRenderer.material;
-                _instanceMaterial = new Material(dissolveMat);
-
-                // Copy textures and color from original material
-                if (originalMat.HasProperty("_BaseMap"))
-                    _instanceMaterial.SetTexture("_BaseMap", originalMat.GetTexture("_BaseMap"));
-                if (originalMat.HasProperty("_NormalMap"))
-                    _instanceMaterial.SetTexture("_NormalMap", originalMat.GetTexture("_NormalMap"));
-                if (originalMat.HasProperty("_EmissionMap"))
-                    _instanceMaterial.SetTexture("_EmissionMap", originalMat.GetTexture("_EmissionMap"));
-                if (originalMat.HasProperty("_Color"))
-                    _instanceMaterial.SetColor("_Color", originalMat.GetColor("_Color"));
-                if (originalMat.IsKeywordEnabled("_EMISSION"))
-                    _instanceMaterial.EnableKeyword("_EMISSION");
-
-                _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
-
-                meshRenderer.material = _instanceMaterial;
-            }
-            else
-            {
-                Debug.LogWarning("EII TOIMI! (SkinnedMeshRenderer not found)");
-            }
-        }
+        dissolveController = GetComponentInChildren<DissolveController>();
     }
 
     void Update()
     {
-        if (isDissolving && _instanceMaterial != null)
-        { 
-            agent.isStopped = true;
-            dissolveValue += Time.deltaTime * dissolveSpeed;
-            _instanceMaterial.SetFloat("_DissolveAmount", dissolveValue);
-        }
-
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         if (!hasAggro && distanceToPlayer <= aggroRange)
         {
@@ -228,16 +189,11 @@ public class BrazierAI : MonoBehaviour, IDamageable
     public void Die()
     {
         agent.isStopped = true;
+        isAttacking = true;
         PlayDeathSound();
-        if (_instanceMaterial != null)
+        if (dissolveController != null)
         {
-            isDissolving = true;
-            SkinnedMeshRenderer meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
-            if (meshRenderer != null)
-            {
-                meshRenderer.materials = new Material[] {_instanceMaterial};
-            }
-            Destroy(gameObject, 2.5f);
+            dissolveController.StartDissolve();
         }
         else
         {
