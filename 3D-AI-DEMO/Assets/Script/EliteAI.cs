@@ -24,9 +24,6 @@ public class EliteAI : MonoBehaviour, IDamageable
 
     public float runDistance = 10f;
     public float walkDistance = 5f;
-
-    private float runSpeed = 6f;
-    private float walkSpeed = 2f;
     public float attackRange = 4f;   
     public float rangedAttackRange = 20f; 
     private bool isAttacking = false;

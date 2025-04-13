@@ -5,24 +5,33 @@ public class DissolveController : MonoBehaviour
 {
     public float dissolveSpeed = 1f;
     public float delayBeforeDissolve = 0.5f;
-    public Material dissolveMat; // The dissolve shader with the _BaseTex property
-
-    private Material _originalBaseMaterial;
-    private Material _dissolveMaterialInstance;
-    private SkinnedMeshRenderer _renderer;
+    public float delayBeforeDelete = 0.5f;
+    public Material dissolveMat;
+    private Material[] _originalBaseMaterial;
+    private Material[] _dissolveMaterialInstance;
+    private SkinnedMeshRenderer[] _renderer;
     private bool _isDissolving = false;
 
     private void Awake()
     {
-        _renderer = GetComponentInChildren<SkinnedMeshRenderer>();
-        if (_renderer != null && _renderer.materials.Length > 0)
+        _renderer = GetComponentsInChildren<SkinnedMeshRenderer>();
+        if (_renderer.Length == 0)
         {
-            _originalBaseMaterial = _renderer.materials[0];
+            Debug.LogWarning("Eipä tullu mitään");
+            return;
         }
-        else
+
+        _originalBaseMaterial = new Material[_renderer.Length];
+        _dissolveMaterialInstance = new Material[_renderer.Length];
+
+        for (int i = 0; i < _renderer.Length; i++)
         {
-            Debug.LogWarning("SkinnedMeshRenderer not found or no materials on " + gameObject.name);
+            if (_renderer[i].materials.Length > 0)
+            {
+                _originalBaseMaterial[i] = _renderer[i].materials[0];
+            }
         }
+
     }
 
     public void StartDissolve()
@@ -33,10 +42,17 @@ public class DissolveController : MonoBehaviour
             return;
         }
 
-        _dissolveMaterialInstance = new Material(dissolveMat);
-        CopyTextures(_originalBaseMaterial, _dissolveMaterialInstance);
-        _dissolveMaterialInstance.SetFloat("_DissolveAmount", -1f);
-        _renderer.materials = new Material[] { _dissolveMaterialInstance };
+        for (int i = 0; i < _renderer.Length; i++)
+        {
+            if (_originalBaseMaterial[i] != null)
+            {
+                var instance = new Material(dissolveMat);
+                CopyTextures(_originalBaseMaterial[i], instance);
+                instance.SetFloat("_DissolveAmount", -1f);
+                _dissolveMaterialInstance[i] = instance;
+                _renderer[i].materials = new Material[] { instance };
+            }
+        }
 
         StartCoroutine(DissolveRoutine());
     }
@@ -51,13 +67,14 @@ public class DissolveController : MonoBehaviour
 
         if (from.HasProperty("_Color") && to.HasProperty("_Color"))
             to.SetColor("_Color", from.GetColor("_Color"));
-        
+        if (from.HasProperty("_BumpMap") && to.HasProperty("_BumpMap"))
+            to.SetTexture("_BumpMap", from.GetTexture("_BumpMap"));
+            to.EnableKeyword("_NORMALMAP");
     }
 
     private IEnumerator DissolveRoutine()
     {
         _isDissolving = true;
-
         yield return new WaitForSeconds(delayBeforeDissolve);
 
         float dissolveAmount = -1f;
@@ -65,19 +82,23 @@ public class DissolveController : MonoBehaviour
         while (dissolveAmount < 1f)
         {
             dissolveAmount += Time.deltaTime * dissolveSpeed;
-            if (_dissolveMaterialInstance != null)
+            foreach (var mat in _dissolveMaterialInstance)
             {
-                _dissolveMaterialInstance.SetFloat("_DissolveAmount", dissolveAmount);  // Dissolve effect
+                if (mat != null)
+                {
+                    mat.SetFloat("_DissolveAmount", dissolveAmount);
+                }
             }
 
             yield return null;
         }
 
-        _dissolveMaterialInstance?.SetFloat("_DissolveAmount", 1f);
-        yield return new WaitForSeconds(0.5f);
+        foreach (var mat in _dissolveMaterialInstance)
+        {
+            mat?.SetFloat("_DissolveAmount", 1f);
+        }
 
-        Destroy(gameObject); // Destroy after dissolving
+        yield return new WaitForSeconds(delayBeforeDelete);
+        Destroy(gameObject);
     }
-
-    public bool IsDissolving() => _isDissolving;
 }
