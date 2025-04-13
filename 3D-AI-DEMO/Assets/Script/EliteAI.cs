@@ -21,6 +21,7 @@ public class EliteAI : MonoBehaviour, IDamageable
     private NavMeshAgent agent;
     private Animator animator;
     private AudioSource audioSource;
+    private bool dead = false;
 
     public float runDistance = 10f;
     public float walkDistance = 5f;
@@ -48,7 +49,7 @@ public class EliteAI : MonoBehaviour, IDamageable
     //hahaaa! ei enää!
     void Update()
     {
-        if (isAttacking) return; 
+        if (isAttacking || dead) return; 
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
@@ -79,6 +80,7 @@ public class EliteAI : MonoBehaviour, IDamageable
 
     private IEnumerator Punch()
     {
+    if (dead) yield break;
     isAttacking = true;
     canPunch = false;
 
@@ -111,6 +113,7 @@ public class EliteAI : MonoBehaviour, IDamageable
 
     private IEnumerator FireAttack()
     {
+        if (dead) yield break;
         canPunch = false;
         isAttacking = true;
         agent.isStopped = true;
@@ -139,6 +142,7 @@ public class EliteAI : MonoBehaviour, IDamageable
     //HOX HOX! Gpt auttoi tässä matikassa
     private IEnumerator SpinAttack()
     {
+        if (dead) yield break;
         canPunch = false;
         isAttacking = true;
         agent.isStopped = true;
@@ -249,6 +253,7 @@ public class EliteAI : MonoBehaviour, IDamageable
 
     public void Die()
     {
+        dead = true;
         agent.isStopped = true;
         isAttacking = true;
         animator.SetBool("Death", true);

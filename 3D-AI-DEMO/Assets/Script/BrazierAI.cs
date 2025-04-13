@@ -141,6 +141,7 @@ public class BrazierAI : MonoBehaviour, IDamageable
         agent.speed = 3.5f;
     }
 
+    //bounce apua
     private IEnumerator MoveAtConstantSpeed(Vector3 start, Vector3 end, float speed)
     {
         float distance = Vector3.Distance(start, end);
@@ -154,7 +155,19 @@ public class BrazierAI : MonoBehaviour, IDamageable
             yield return null;
         }
         
-        transform.position = end;
+        transform.position = SnapToNavMesh(end);
+    }
+
+    //tämän idea on ettei se enää mene maan läpi
+    //ei toimi aina.
+    //https://docs.unity3d.com/6000.0/Documentation/ScriptReference/AI.NavMesh.SamplePosition.html
+    private Vector3 SnapToNavMesh(Vector3 position)
+    {
+        if (NavMesh.SamplePosition(position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+        return position;
     }
 
     private IEnumerator SpawnFireTrail()
