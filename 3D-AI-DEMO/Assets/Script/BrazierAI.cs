@@ -216,6 +216,7 @@ public class BrazierAI : MonoBehaviour, IDamageable
     {
         agent.isStopped = true;
         isAttacking = true;
+        enabled = false;
         PlayDeathSound();
         if (dissolveController != null)
         {
