@@ -59,12 +59,10 @@ public class DissolveController : MonoBehaviour
 
     private void CopyTextures(Material from, Material to)
     {
+        Debug.Log(from.GetTexture("_BumpMap")); // Should not be null
+
         if (from.HasProperty("_BaseMap") && to.HasProperty("_BaseTex"))
             to.SetTexture("_BaseTex", from.GetTexture("_BaseMap"));
-
-        if (from.HasProperty("_EmissionMap") && to.HasProperty("_EmissionMap"))
-            to.SetTexture("_EmissionMap", from.GetTexture("_EmissionMap"));
-
         if (from.HasProperty("_Color") && to.HasProperty("_Color"))
             to.SetColor("_Color", from.GetColor("_Color"));
         if (from.HasProperty("_BumpMap") && to.HasProperty("_BumpMap"))

@@ -36,12 +36,15 @@ public class EliteAI : MonoBehaviour, IDamageable
     public float rangedAttackRange = 20f; 
     private bool isAttacking = false;
     public bool canPunch = true; //muuta nimi jossain vaiheessa globaaliksi attackCooldowniksi
+    private bool hasAggro = false;
+    public float aggroRange  = 10f;
 
     private DissolveController[] dissolveControllers;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        agent.enabled = false;
         animator = GetComponent<Animator>();
 
         if (idleLoopSource && idleLoopSound)
@@ -67,9 +70,14 @@ public class EliteAI : MonoBehaviour, IDamageable
         if (isAttacking || dead) return; 
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        if (!hasAggro && distanceToPlayer <= aggroRange)
+        {
+            hasAggro = true;
+            agent.enabled = true;
+        }
 
+        if (!hasAggro) return;
         animator.SetBool("isRunning", true);
-
         agent.SetDestination(player.position);
 
         if (distanceToPlayer <= attackRange && canPunch) 
@@ -78,7 +86,7 @@ public class EliteAI : MonoBehaviour, IDamageable
         }
         else if (distanceToPlayer <= rangedAttackRange && canPunch) 
         {
-            if (distanceToPlayer <= rangedAttackRange && rangeCooldown == 0) 
+            if (rangeCooldown == 0) 
             {
                 if (rangedAttackCounter < 1)
                 {
