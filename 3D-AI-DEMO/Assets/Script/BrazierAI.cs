@@ -146,12 +146,25 @@ public class BrazierAI : MonoBehaviour, IDamageable
     {
         float distance = Vector3.Distance(start, end);
         float travelTime = distance / speed;
-        float elapsedTime = 0f;
         
-        while (elapsedTime < travelTime)
+        //uusi muutos
+        //ottaa nyt kiinni nav-meshistä
+        //eli oikeasti menee maata pitkin
+        int steps = Mathf.CeilToInt(travelTime / Time.deltaTime);
+        for (int i = 0; i <= steps; i++)
         {
-            transform.position = Vector3.Lerp(start, end, elapsedTime / travelTime);
-            elapsedTime += Time.deltaTime;
+            float t = (float)i / steps;
+           Vector3 lerpPos = Vector3.Lerp(start, end, t);
+           //tässä etsii lähimmän navmesh kohdan
+            if (NavMesh.SamplePosition(lerpPos, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+            {
+                transform.position = hit.position;
+            }
+            else
+            {
+            transform.position = lerpPos;
+            }
+
             yield return null;
         }
         

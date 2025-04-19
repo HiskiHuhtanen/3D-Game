@@ -16,15 +16,22 @@ public class EliteAI : MonoBehaviour, IDamageable
     public GameObject explosion;
     public AudioClip deathSound;
     public float health = 1f;
+    public AudioClip idleLoopSound;
+    public AudioClip stepSound1;
+    public AudioClip stepSound2;
+    public AudioClip punchSound;
+    public AudioClip fireAttackSound;
+    public AudioClip spinAttackSound;
+    public AudioSource idleLoopSource;
+    public AudioSource sfxSource;
+
     private int rangeCooldown = 0;
     private int rangedAttackCounter = 0;
     private NavMeshAgent agent;
     private Animator animator;
     private AudioSource audioSource;
     private bool dead = false;
-
-    public float runDistance = 10f;
-    public float walkDistance = 5f;
+    private int step = 0;
     public float attackRange = 4f;   
     public float rangedAttackRange = 20f; 
     private bool isAttacking = false;
@@ -36,6 +43,14 @@ public class EliteAI : MonoBehaviour, IDamageable
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
+
+        if (idleLoopSource && idleLoopSound)
+        {
+            idleLoopSource.clip = idleLoopSound;
+            idleLoopSource.loop = true;
+            idleLoopSource.Play();
+        }
+
         dissolveControllers = GetComponentsInChildren<DissolveController>();
         if (dissolveControllers.Length == 0)
         {
@@ -85,21 +100,23 @@ public class EliteAI : MonoBehaviour, IDamageable
     canPunch = false;
 
     animator.SetBool("isDashing", true);
+    PlaySound(punchSound);
+    yield return new WaitForSeconds(0.3f);
 
     Vector3 firstDashDirection = (transform.forward + transform.right).normalized;
     Vector3 firstDashPosition = transform.position + firstDashDirection * 6f; 
-    transform.position = firstDashPosition;
-    yield return new WaitForSeconds(0.5f);
+    yield return MoveToward(firstDashPosition, 20f);
 
     Vector3 directionToPlayer = (player.transform.position - firstDashPosition).normalized;
     Vector3 secondDashPosition = player.transform.position + directionToPlayer * -2f;
-    transform.position = secondDashPosition;
+    //transform.position = secondDashPosition;
     //yield return new WaitForSeconds(0.5f);
+    yield return MoveToward(secondDashPosition, 25f);
 
     animator.SetBool("isDashing", false);
     animator.SetBool("isPunching", true);
     agent.isStopped = true; 
-    yield return new WaitForSeconds(2f);
+    yield return new WaitForSeconds(1.5f);
 
     animator.SetBool("isPunching", false);
 
@@ -111,6 +128,22 @@ public class EliteAI : MonoBehaviour, IDamageable
     canPunch = true;
     }
 
+    private IEnumerator MoveToward(Vector3 targetPos, float speed)
+    {
+        Vector3 start = transform.position;
+        float distance = Vector3.Distance(start, targetPos);
+        float travelTime = distance / speed;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < travelTime)
+        {
+            transform.position = Vector3.Lerp(start, targetPos, elapsedTime / travelTime);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        transform.position = targetPos;
+    }
+
     private IEnumerator FireAttack()
     {
         if (dead) yield break;
@@ -118,6 +151,7 @@ public class EliteAI : MonoBehaviour, IDamageable
         isAttacking = true;
         agent.isStopped = true;
         animator.SetBool("isRanged", true);
+        PlaySound(fireAttackSound);
         int fireCount = 10;
         float fireDistance = 1.5f;
         rangeCooldown = rangeCooldown + 2;
@@ -164,6 +198,7 @@ public class EliteAI : MonoBehaviour, IDamageable
         int fireSpawnCount = 10;
         float minSpinTime = 1.5f;
         float maxSpinTime = 5f;
+        PlaySound(spinAttackSound);
 
         for (int i = 0; i < pairs; i++)
         {
@@ -253,11 +288,11 @@ public class EliteAI : MonoBehaviour, IDamageable
 
     public void Die()
     {
+        agent.enabled = false;
         dead = true;
         agent.isStopped = true;
         isAttacking = true;
         animator.SetBool("Death", true);
-        PlayDeathSound();
 
         if (dissolveControllers != null)
         {
@@ -265,6 +300,7 @@ public class EliteAI : MonoBehaviour, IDamageable
             {
                 Debug.Log("HAHHAHAHAHAaa dissolvea taas!!");
                 dissolveController.StartDissolve();
+                PlaySound(deathSound);
             }
         }
         else
@@ -274,11 +310,17 @@ public class EliteAI : MonoBehaviour, IDamageable
         }
     }
 
-    private void PlayDeathSound()
+    public void PlayFootstep()
     {
-        if (audioSource && deathSound)
-        {
-            audioSource.PlayOneShot(deathSound);
-        }
+        if (!sfxSource) return;
+        AudioClip stepClip = (step == 0) ? stepSound1 : stepSound2;
+        step = 1 - step;
+
+        if (stepClip) sfxSource.PlayOneShot(stepClip);
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        sfxSource.PlayOneShot(clip);
     }
 }
