@@ -22,13 +22,13 @@ public class BrazierAI : MonoBehaviour, IDamageable
     public Material dissolveMat;
     public AudioClip deathSound;
 
-    private NavMeshAgent agent;
+    public NavMeshAgent agent;
     private Animator animator;
     private AudioSource audioSource;
 
     private bool isAttacking = false;
     private bool isJumping = false;
-    private bool hasAggro = false;
+    public bool hasAggro = false;
     public float wanderTimeout = 5f;
     private float wanderTimer = 0f;
     private bool isWandering = false;
@@ -44,7 +44,7 @@ public class BrazierAI : MonoBehaviour, IDamageable
         dissolveController = GetComponentInChildren<DissolveController>();
     }
 
-    void Update()
+    protected virtual void Update()
     {
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         if (!hasAggro && distanceToPlayer <= aggroRange)

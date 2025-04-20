@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GeyserArcLauncher : MonoBehaviour
+public class LaunchpadTransform : MonoBehaviour
 {
     public Transform targetPoint;
     public float arcHeight = 10f;
