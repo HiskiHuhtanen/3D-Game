@@ -198,14 +198,16 @@ public class EliteAI : MonoBehaviour, IDamageable
         //näitä voisi ehkä siirtää publiciksi
         int pairs = 8;
         float lineDistance = 5f;
-        float rotationSpeed = 45f;
+        float baseRotationSpeed = 90f;
+        float currentRotationSpeed = baseRotationSpeed;
+        int spinDirection = 1;
         GameObject[] lines = new GameObject[pairs * 2];
         float angleStep = 360f / pairs;
         float currentRotation = 0f;
         int attackRepeats = 3;
         int fireSpawnCount = 10;
         float minSpinTime = 1.5f;
-        float maxSpinTime = 5f;
+        float maxSpinTime = 4f;
         PlaySound(spinAttackSound);
 
         for (int i = 0; i < pairs; i++)
@@ -227,17 +229,20 @@ public class EliteAI : MonoBehaviour, IDamageable
             float spinTime = UnityEngine.Random.Range(minSpinTime, maxSpinTime);
             while (timer < spinTime)
             {
-                currentRotation += rotationSpeed * Time.deltaTime;
+                float deltaRotation = currentRotationSpeed * Time.deltaTime * spinDirection;
+                currentRotation += deltaRotation;
                 for (int i = 0; i < lines.Length; i++)
                 {
                     if (lines[i] != null)
                     {
-                        lines[i].transform.RotateAround(transform.position, Vector3.up, rotationSpeed * Time.deltaTime);
+                        lines[i].transform.RotateAround(transform.position, Vector3.up, deltaRotation);
                 }
                 }
                 timer += Time.deltaTime;
                 yield return null;
             }
+            spinDirection *= -1;
+            currentRotationSpeed *= 1.2f;
             SpawnFire(lines, fireSpawnCount);
             yield return new WaitForSeconds(1f);
         }

@@ -20,7 +20,6 @@ public class BrazierAI : MonoBehaviour, IDamageable
     public GameObject fire;
     public float fireGap;
     public Material dissolveMat;
-
     public AudioClip deathSound;
 
     private NavMeshAgent agent;
@@ -30,6 +29,10 @@ public class BrazierAI : MonoBehaviour, IDamageable
     private bool isAttacking = false;
     private bool isJumping = false;
     private bool hasAggro = false;
+    public float wanderTimeout = 5f;
+    private float wanderTimer = 0f;
+    private bool isWandering = false;
+
     private Vector3 rollTarget;
     private DissolveController dissolveController;
 
@@ -60,10 +63,22 @@ public class BrazierAI : MonoBehaviour, IDamageable
         }
         else if (!hasAggro && !isAttacking && !isJumping)
         {
-            if (!agent.hasPath || agent.remainingDistance < 1f)
+            if (!isWandering)
             {
+                isWandering = true;
+                wanderTimer = 0f;
                 Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
                 agent.SetDestination(newPos);
+            }
+
+            wanderTimer += Time.deltaTime;
+
+            if (agent.remainingDistance < 1f || wanderTimer > wanderTimeout)
+            {
+                isWandering = false;
+                Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
+                agent.SetDestination(newPos);
+                wanderTimer = 0f;
             }
 
             if (agent.velocity.magnitude > 0.1f)
