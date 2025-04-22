@@ -7,9 +7,11 @@ using UnityEngine.AI;
 
 public class BrazierAI : MonoBehaviour, IDamageable
 {
+    [SerializeField] private HealthBar healthBar;
     public Transform player;
     public float attackCooldown = 1.5f;
-    public float health = 1f;
+    public float health = 3f;
+    public float maxHealth = 3f;
     public float rollSpeed = 10f;
     public float rollDistance = 5f;
     public float postRollWaitTime = 1f;
@@ -21,7 +23,6 @@ public class BrazierAI : MonoBehaviour, IDamageable
     public float fireGap;
     public Material dissolveMat;
     public AudioClip deathSound;
-
     public NavMeshAgent agent;
     private Animator animator;
     private AudioSource audioSource;
@@ -42,6 +43,8 @@ public class BrazierAI : MonoBehaviour, IDamageable
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         dissolveController = GetComponentInChildren<DissolveController>();
+        health = maxHealth;
+        healthBar?.SetHealth(health, maxHealth);
     }
 
     protected virtual void Update()
@@ -221,6 +224,7 @@ public class BrazierAI : MonoBehaviour, IDamageable
     public void TakeDamage(float damage)
     {
         health -= damage;
+        healthBar?.SetHealth(health, maxHealth);
         if (health <= 0)
         {
             Die();
