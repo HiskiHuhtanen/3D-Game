@@ -7,9 +7,11 @@ public class AttackScript : MonoBehaviour
     public Transform attackPoint;
     public float attackCooldown = 1f;
     private bool attacking = false;
+    private Animator animator;
 
     void Update()
     {
+        _hasAnimator = TryGetComponent(out _animator);
         if (input.attack && !attacking)
         {
             StartAttack();

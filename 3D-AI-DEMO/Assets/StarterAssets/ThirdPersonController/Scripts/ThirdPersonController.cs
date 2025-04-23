@@ -98,6 +98,9 @@ namespace StarterAssets
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
 
+        private int _animIDisRunning;
+        private int _animIDisWalking;
+
 #if ENABLE_INPUT_SYSTEM 
         private PlayerInput _playerInput;
 #endif
@@ -173,6 +176,9 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+
+            _animIDisRunning = Animator.StringToHash("isRunning");
+            _animIDisWalking = Animator.StringToHash("isWalking");
         }
 
         private void GroundedCheck()
@@ -274,8 +280,20 @@ namespace StarterAssets
             // update animator if using character
             if (_hasAnimator)
             {
-                _animator.SetFloat(_animIDSpeed, _animationBlend);
-                _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+                //_animator.SetFloat(_animIDSpeed, _animationBlend);
+                //_animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+                if(_speed == 0.0f){
+                    _animator.SetBool(_animIDisWalking, false);
+                    _animator.SetBool(_animIDisRunning, false);
+                } 
+                else if(_input.sprint){
+                    _animator.SetBool(_animIDisWalking, false);
+                    _animator.SetBool(_animIDisRunning, true);
+                }
+                else if(targetSpeed != 0.0f && !_input.sprint){
+                    _animator.SetBool(_animIDisRunning, false);
+                    _animator.SetBool(_animIDisWalking, true);
+                }
             }
         }
 
