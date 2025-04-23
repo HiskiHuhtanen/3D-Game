@@ -40,6 +40,7 @@ public class EliteAI : MonoBehaviour, IDamageable
     public float aggroRange  = 10f;
 
     private DissolveController[] dissolveControllers;
+    public BossDeath skyEffect;
 
     void Start()
     {
@@ -320,6 +321,11 @@ public class EliteAI : MonoBehaviour, IDamageable
         {
             Debug.Log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
             Destroy(gameObject, deathSound.length);
+        }
+
+        if (skyEffect != null)
+        {
+        skyEffect.TriggerBossDeath();
         }
     }
 
