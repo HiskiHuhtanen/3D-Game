@@ -1,4 +1,6 @@
 using UnityEngine;
+using System;
+using System.Collections;
 
 public class AttackScript : MonoBehaviour
 {
@@ -24,6 +26,7 @@ public class AttackScript : MonoBehaviour
     }
 
     void StartAttack()
+    //IEnumerator StartAttack()
     {
         attacking = true;
         if (_hasAnimator)
@@ -33,6 +36,7 @@ public class AttackScript : MonoBehaviour
         
         Vector3 effectPosition = attackPoint.position;
         Quaternion effectRotation = transform.rotation;
+        //yield return new WaitForSeconds(1f);
         GameObject effect = Instantiate(slash, effectPosition, effectRotation);
         Destroy(effect, 1.0f);
 
