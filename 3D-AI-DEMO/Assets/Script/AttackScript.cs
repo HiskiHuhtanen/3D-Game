@@ -8,10 +8,14 @@ public class AttackScript : MonoBehaviour
     public float attackCooldown = 1f;
     private bool attacking = false;
     private Animator animator;
+    private bool _hasAnimator;
+    private int _animIDisAttacking;
 
     void Update()
     {
-        _hasAnimator = TryGetComponent(out _animator);
+        _hasAnimator = TryGetComponent(out animator);
+        _animIDisAttacking = Animator.StringToHash("isAttacking");
+        
         if (input.attack && !attacking)
         {
             StartAttack();
@@ -22,6 +26,11 @@ public class AttackScript : MonoBehaviour
     void StartAttack()
     {
         attacking = true;
+        if (_hasAnimator)
+        {
+            animator.SetBool(_animIDisAttacking, attacking);
+        }
+        
         Vector3 effectPosition = attackPoint.position;
         Quaternion effectRotation = transform.rotation;
         GameObject effect = Instantiate(slash, effectPosition, effectRotation);
@@ -46,5 +55,6 @@ public class AttackScript : MonoBehaviour
     void ResetAttack()
     {
         attacking = false;
+        animator.SetBool(_animIDisAttacking, attacking);
     }
 }
