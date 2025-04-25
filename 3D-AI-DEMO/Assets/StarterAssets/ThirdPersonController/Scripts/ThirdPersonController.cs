@@ -1,4 +1,5 @@
-﻿ using UnityEngine;
+﻿using UnityEngine;
+
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -100,6 +101,7 @@ namespace StarterAssets
 
         private int _animIDisRunning;
         private int _animIDisWalking;
+        private bool jumpPending = false;
 
 #if ENABLE_INPUT_SYSTEM 
         private PlayerInput _playerInput;
@@ -309,6 +311,7 @@ namespace StarterAssets
                 {
                     _animator.SetBool(_animIDJump, false);
                     _animator.SetBool(_animIDFreeFall, false);
+                    jumpPending = false;
                 }
 
                 // stop our velocity dropping infinitely when grounded
@@ -321,13 +324,15 @@ namespace StarterAssets
                 if (_input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
-                    _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+                    //_verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+                    jumpPending = true; // prevent re-triggering
 
                     // update animator if using character
-                    if (_hasAnimator)
+                    if (_hasAnimator && jumpPending)
                     {
                         _animator.SetBool(_animIDJump, true);
                     }
+                   
                 }
 
                 // jump timeout
@@ -364,6 +369,12 @@ namespace StarterAssets
             {
                 _verticalVelocity += Gravity * Time.deltaTime;
             }
+        }
+        public void ExecuteJump()                                   // animation event
+        {
+            _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity); // jump movement
+            jumpPending = false; // reset jumpPending 
+            Debug.Log("ExecuteJump called!");
         }
 
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)

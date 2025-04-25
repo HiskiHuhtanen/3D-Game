@@ -936,6 +936,7 @@ MonoBehaviour:
   rangedAttackRange: 20
   canPunch: 1
   aggroRange: 10
+  skyEffect: {fileID: 0}
 --- !u!114 &83177517
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18038,6 +18039,10 @@ PrefabInstance:
     - target: {fileID: 4416926081852918490, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: MoveSpeed
       value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4416926081852918490, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4416926081852918490, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
       propertyPath: SprintSpeed
