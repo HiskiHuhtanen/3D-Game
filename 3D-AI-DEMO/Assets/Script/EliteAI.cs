@@ -104,37 +104,37 @@ public class EliteAI : MonoBehaviour, IDamageable
 
     private IEnumerator Punch()
     {
-    if (dead) yield break;
-    isAttacking = true;
-    canPunch = false;
+        if (dead) yield break;
+        isAttacking = true;
+        canPunch = false;
 
-    animator.SetBool("isDashing", true);
-    PlaySound(punchSound);
-    yield return new WaitForSeconds(0.3f);
+        animator.SetBool("isDashing", true);
+        PlaySound(punchSound);
+        yield return new WaitForSeconds(0.3f);
 
-    Vector3 firstDashDirection = (transform.forward + transform.right).normalized;
-    Vector3 firstDashPosition = transform.position + firstDashDirection * 6f; 
-    yield return MoveToward(firstDashPosition, 20f);
+        Vector3 firstDashDirection = (transform.forward + transform.right).normalized;
+        Vector3 firstDashPosition = transform.position + firstDashDirection * 6f; 
+        yield return MoveToward(firstDashPosition, 20f);
 
-    Vector3 directionToPlayer = (player.transform.position - firstDashPosition).normalized;
-    Vector3 secondDashPosition = player.transform.position + directionToPlayer * -2f;
-    //transform.position = secondDashPosition;
-    //yield return new WaitForSeconds(0.5f);
-    yield return MoveToward(secondDashPosition, 25f);
+        Vector3 directionToPlayer = (player.transform.position - firstDashPosition).normalized;
+        Vector3 secondDashPosition = player.transform.position + directionToPlayer * -2f;
+        //transform.position = secondDashPosition;
+        //yield return new WaitForSeconds(0.5f);
+        yield return MoveToward(secondDashPosition, 25f);
 
-    animator.SetBool("isDashing", false);
-    animator.SetBool("isPunching", true);
-    agent.isStopped = true; 
-    yield return new WaitForSeconds(1.5f);
+        animator.SetBool("isDashing", false);
+        animator.SetBool("isPunching", true);
+        agent.isStopped = true; 
+        yield return new WaitForSeconds(1.5f);
 
-    animator.SetBool("isPunching", false);
+        animator.SetBool("isPunching", false);
 
-    agent.isStopped = false;
-    isAttacking = false;
-    //miksi näin???? eikä vaa rangeCooldown -= 1
-    rangeCooldown = Mathf.Max(rangeCooldown - 1, 0);
-    yield return new WaitForSeconds(4f);
-    canPunch = true;
+        agent.isStopped = false;
+        isAttacking = false;
+        //miksi näin???? eikä vaa rangeCooldown -= 1
+        rangeCooldown = Mathf.Max(rangeCooldown - 1, 0);
+        yield return new WaitForSeconds(4f);
+        canPunch = true;
     }
 
     private IEnumerator MoveToward(Vector3 targetPos, float speed)
@@ -265,7 +265,7 @@ public class EliteAI : MonoBehaviour, IDamageable
 
     //eli idea olisi luoda 5 tyhjää gameobjectia viivojen sisälle
     //tasoittaa ne erille toisiistan ja sit spawnata tuli niihin
-    //ei hirveän järkevä ratkaisu, jos haluaisi sienon efektin
+    //ei hirveän järkevä ratkaisu, jos haluaisi hienon efektin
     private void SpawnFire(GameObject[] lines, int fireCount)
     {
         for (int i = 0; i < lines.Length; i += 2)
