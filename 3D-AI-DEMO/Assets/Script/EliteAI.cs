@@ -14,6 +14,7 @@ public class EliteAI : MonoBehaviour, IDamageable
     public GameObject fire;
     public GameObject warningLine;
     public GameObject explosion;
+    public BossDragon bossDragon;
     public AudioClip deathSound;
     public float health = 1f;
     public AudioClip idleLoopSound;
@@ -75,6 +76,7 @@ public class EliteAI : MonoBehaviour, IDamageable
         {
             hasAggro = true;
             agent.enabled = true;
+            bossDragon.hasAggro = true;
         }
 
         if (!hasAggro) return;
@@ -287,7 +289,8 @@ public class EliteAI : MonoBehaviour, IDamageable
             {
                 float offset = (j + 1) * fireSpacing - (Vector3.Distance(line1Pos, line2Pos) / 2);
                 Vector3 fireSpawnPos = centerPos + perpendicularSpread * offset;
-                Instantiate(explosion, fireSpawnPos, fireRotation);
+                GameObject fireInstance = Instantiate(explosion, fireSpawnPos, fireRotation);
+                Destroy(fireInstance, 5f);
             }
         }
     }

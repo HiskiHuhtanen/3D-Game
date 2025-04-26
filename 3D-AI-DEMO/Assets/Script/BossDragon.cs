@@ -3,97 +3,124 @@ using UnityEngine;
 
 public class BossDragon : MonoBehaviour
 {
-    public GameObject fireball;
+    public GameObject fireballPrefab;
     public float health = 3f;
     public Transform player;
-    private bool isAttacking = false;
     public bool hasAggro = false;
     public Transform fireballSpawn;
+    private GameObject chargingFireball;
     private Animator animator;
+    private bool isAttacking = false;
+    private Vector3 shootDirection;
+    public Transform[] pathPoints;
+    private int currentPathIndex = 0;
+    public float speed = 10f;
+    private Vector3 velocity = Vector3.zero;
+    private float originalY;
+    public float rotationSpeed = 2f;
+    public float heightVariation = 1.5f;
+    public float bobbingSpeed = 1f;
+    public float bankingAmount = 20f;
+
 
     void Start()
     {
         animator = GetComponent<Animator>();
+        if (pathPoints.Length == 0) return;
+        originalY = transform.position.y;
     }
 
     void Update()
     {
         if (!isAttacking && hasAggro)
         {
-            Debug.Log("Starting fireball attack...");
-            isAttacking = true;
-            StartCoroutine(FireballAttackRoutine());
+            //Debug.Log("Starting fireball attack...");
+            //isAttacking = true;
+            //animator.SetBool("Attack", true);
+            MoveSmoothlyAlongPath();
         }
+        
     }
 
-    IEnumerator FireballAttackRoutine()
+    // Called from animation event to create and grow the fireball
+    public void SpawnAndGrowFireball()
     {
-        animator.SetBool("Attack", true);
-        Debug.Log("Attack animation started");
+        if (chargingFireball != null) return; // Already charging
 
-        yield return new WaitForSeconds(0.5f);
+        Debug.Log("Spawning and growing fireball...");
 
-        GameObject fireCopy = Instantiate(fireball, fireballSpawn.position, Quaternion.identity);
-        Debug.Log("Fireball instantiated");
+        chargingFireball = Instantiate(fireballPrefab, fireballSpawn.position, Quaternion.identity);
+        chargingFireball.transform.SetParent(fireballSpawn, worldPositionStays: true); // Attach to bone
 
-        // Make fireball a child temporarily while it charges
-        fireCopy.transform.SetParent(transform);
+        StartCoroutine(GrowFireball(chargingFireball.transform));
+    }
 
-        // Grow it large
-        Vector3 initialScale = fireCopy.transform.localScale;
-        Vector3 targetScale = new Vector3(6f, 6f, 6f); // Much bigger!
+    IEnumerator GrowFireball(Transform fireball)
+    {
+        Vector3 initialScale = fireball.localScale;
+        Vector3 targetScale = new Vector3(20f, 20f, 20f);
         float growDuration = 1.5f;
         float t = 0f;
+
         while (t < growDuration)
         {
             t += Time.deltaTime;
-            fireCopy.transform.localScale = Vector3.Lerp(initialScale, targetScale, t / growDuration);
-            yield return null;
-        }
-        Debug.Log("Fireball charged to full size");
-
-        // Detach and shoot
-        fireCopy.transform.SetParent(null);
-
-        Vector3 direction = (player.position - fireballSpawn.position).normalized;
-        float speed = 15f;
-
-        Debug.DrawRay(fireballSpawn.position, direction * 5f, Color.red, 2f);
-        Debug.Log("Launching fireball toward: " + player.position);
-
-        // Move the fireball using a coroutine
-        yield return StartCoroutine(MoveFireball(fireCopy.transform, direction, speed, 3f));
-
-        // Shrink and destroy
-        t = 0f;
-        Vector3 shrinkScale = Vector3.zero;
-        Vector3 currentScale = fireCopy.transform.localScale;
-        float shrinkDuration = 0.5f;
-        while (t < shrinkDuration)
-        {
-            t += Time.deltaTime;
-            fireCopy.transform.localScale = Vector3.Lerp(currentScale, shrinkScale, t / shrinkDuration);
+            fireball.localScale = Vector3.Lerp(initialScale, targetScale, t / growDuration);
             yield return null;
         }
 
-        Destroy(fireCopy);
-        Debug.Log("Fireball destroyed");
+        Debug.Log("Fireball fully charged.");
+    }
 
+    // Called from animation event to launch the fireball toward the player
+    public void LaunchFireball()
+    {
+        if (chargingFireball == null) return;
+
+        Debug.Log("Launching fireball...");
+
+        chargingFireball.transform.SetParent(null); // Detach from dragon
+
+        shootDirection = (player.position - chargingFireball.transform.position).normalized;
+        chargingFireball.AddComponent<FireballMover>().Initialize(shootDirection, 20f);
+
+        chargingFireball = null; // Clear reference
         animator.SetBool("Attack", false);
         isAttacking = false;
-        Debug.Log("Attack finished");
     }
 
-    IEnumerator MoveFireball(Transform fireball, Vector3 direction, float speed, float duration)
+
+    void MoveSmoothlyAlongPath()
     {
-        float timer = 0f;
-        while (timer < duration)
+        if (pathPoints.Length == 0) return;
+
+        Transform target = pathPoints[currentPathIndex];
+        Vector3 targetPosition = target.position;
+
+        // Add vertical bobbing to simulate soaring
+        float bobbingOffset = Mathf.Sin(Time.time * bobbingSpeed) * heightVariation;
+        targetPosition.y += bobbingOffset;
+
+        // Smooth position movement
+        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, 0.3f, speed);
+
+        // Smooth rotation to look at the direction of motion
+        Vector3 direction = (target.position - transform.position).normalized;
+        if (direction != Vector3.zero)
         {
-            fireball.Translate(direction * speed * Time.deltaTime, Space.World);
-            timer += Time.deltaTime;
-            yield return null;
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+            // Add banking effect when turning
+            float banking = Mathf.Clamp(Vector3.SignedAngle(transform.forward, direction, Vector3.up), -1f, 1f) * bankingAmount;
+            targetRotation *= Quaternion.Euler(0, 0, -banking);
+
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
+
+        // Move to next path point when close enough
+        if (Vector3.Distance(transform.position, target.position) < 2f)
+        {
+            currentPathIndex = (currentPathIndex + 1) % pathPoints.Length;
         }
     }
-
-
 }
