@@ -25771,6 +25771,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1350239001842932949, guid: 1410f626c23adc74c95e8247124cd7fa, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 2e9c34fdbd0cd5047b50895efdeea3cb, type: 2}
     - target: {fileID: 919132149155446097, guid: 1410f626c23adc74c95e8247124cd7fa, type: 3}
       propertyPath: m_Name
       value: sieni-solid
