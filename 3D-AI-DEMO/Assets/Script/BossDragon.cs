@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class BossDragon : MonoBehaviour
 {
@@ -21,6 +22,9 @@ public class BossDragon : MonoBehaviour
     public float heightVariation = 1.5f;
     public float bobbingSpeed = 1f;
     public float bankingAmount = 20f;
+    private bool attackSpot = false;
+
+
 
 
     void Start()
@@ -31,16 +35,26 @@ public class BossDragon : MonoBehaviour
     }
 
     void Update()
+{
+    if (!isAttacking && hasAggro && !attackSpot)
     {
-        if (!isAttacking && hasAggro)
-        {
-            //Debug.Log("Starting fireball attack...");
-            //isAttacking = true;
-            //animator.SetBool("Attack", true);
-            MoveSmoothlyAlongPath();
-        }
-        
+        MoveSmoothlyAlongPath();
     }
+
+    if (attackSpot)
+    {
+        attackSpot = false;
+        Debug.Log("Starting fireball attack...");
+        isAttacking = true;
+        animator.SetBool("Attack", true);
+    }
+
+    if (isAttacking)
+    {
+        LookAtPlayer();
+    }
+}
+
 
     // Called from animation event to create and grow the fireball
     public void SpawnAndGrowFireball()
@@ -87,7 +101,13 @@ public class BossDragon : MonoBehaviour
         chargingFireball = null; // Clear reference
         animator.SetBool("Attack", false);
         isAttacking = false;
+        attackSpot = false;
+        Debug.Log("Attack finished, moving to next path point.");
+
+        // FORCE MOVE TO NEXT PATH POINT
+        currentPathIndex = (currentPathIndex + 1) % pathPoints.Length;
     }
+
 
 
     void MoveSmoothlyAlongPath()
@@ -122,5 +142,29 @@ public class BossDragon : MonoBehaviour
         {
             currentPathIndex = (currentPathIndex + 1) % pathPoints.Length;
         }
+
+        if (!attackSpot)
+        {
+            if (currentPathIndex == 3 || currentPathIndex == 6)
+            {
+                attackSpot = true;
+            }
+        }
     }
+
+
+    private void LookAtPlayer()
+{
+    Vector3 directionToPlayer = (player.position - transform.position).normalized;
+    directionToPlayer.y = 0; // Keep dragon level
+
+    if (directionToPlayer != Vector3.zero)
+    {
+        Quaternion lookRotation = Quaternion.LookRotation(directionToPlayer);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, rotationSpeed * 2f * Time.deltaTime); // faster turn when attacking
+    }
+}
+
+
+
 }
