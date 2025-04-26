@@ -6,6 +6,7 @@ public class DissolveController : MonoBehaviour
     public float dissolveSpeed = 1f;
     public float delayBeforeDissolve = 0.5f;
     public float delayBeforeDelete = 0.5f;
+    public bool isPlayer;
     public Material dissolveMat;
     private Material[] _originalBaseMaterial;
     private Material[] _dissolveMaterialInstance;
@@ -97,6 +98,9 @@ public class DissolveController : MonoBehaviour
         }
 
         yield return new WaitForSeconds(delayBeforeDelete);
-        Destroy(gameObject);
+        if (!isPlayer)
+        {
+            Destroy(gameObject);
+        }
     }
 }

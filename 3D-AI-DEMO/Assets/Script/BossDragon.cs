@@ -61,7 +61,6 @@ public class BossDragon : MonoBehaviour
     {
         if (chargingFireball != null) return; // Already charging
 
-        Debug.Log("Spawning and growing fireball...");
 
         chargingFireball = Instantiate(fireballPrefab, fireballSpawn.position, Quaternion.identity);
         chargingFireball.transform.SetParent(fireballSpawn, worldPositionStays: true); // Attach to bone
@@ -83,7 +82,6 @@ public class BossDragon : MonoBehaviour
             yield return null;
         }
 
-        Debug.Log("Fireball fully charged.");
     }
 
     // Called from animation event to launch the fireball toward the player
@@ -91,7 +89,6 @@ public class BossDragon : MonoBehaviour
     {
         if (chargingFireball == null) return;
 
-        Debug.Log("Launching fireball...");
 
         chargingFireball.transform.SetParent(null); // Detach from dragon
 
@@ -102,7 +99,6 @@ public class BossDragon : MonoBehaviour
         animator.SetBool("Attack", false);
         isAttacking = false;
         attackSpot = false;
-        Debug.Log("Attack finished, moving to next path point.");
 
         // FORCE MOVE TO NEXT PATH POINT
         currentPathIndex = (currentPathIndex + 1) % pathPoints.Length;
