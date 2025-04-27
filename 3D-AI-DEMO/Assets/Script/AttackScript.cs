@@ -6,12 +6,8 @@ public class AttackScript : MonoBehaviour
     public StarterAssets.StarterAssetsInputs input;
     public GameObject slash;
     public Transform attackPoint;
-<<<<<<< HEAD
     public float attackCooldown = 0f;
-=======
     public Transform dragonSpot;
-    public float attackCooldown = 0.1f;
->>>>>>> b7297a032c9fd61a7ee86b30151ccb4112886809
     private bool attacking = false;
     private Animator animator;
     private bool _hasAnimator;
@@ -42,13 +38,8 @@ public class AttackScript : MonoBehaviour
 
         Vector3 effectPosition = attackPoint.position;
         Quaternion effectRotation = transform.rotation;
-<<<<<<< HEAD
-        yield return new WaitForSeconds(0.4f);
-=======
 
-        yield return new WaitForSeconds(0.3f); // wait before slash effect appears
-
->>>>>>> b7297a032c9fd61a7ee86b30151ccb4112886809
+        yield return new WaitForSeconds(0.4f); // wait before slash effect appears
         GameObject effect = Instantiate(slash, effectPosition, effectRotation);
         Destroy(effect, 1.0f);
 

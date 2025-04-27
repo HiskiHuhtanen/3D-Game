@@ -34167,12 +34167,8 @@ MonoBehaviour:
   input: {fileID: 1262471703}
   slash: {fileID: 1610206513}
   attackPoint: {fileID: 191470924}
-<<<<<<< HEAD
   attackCooldown: 0
-=======
   dragonSpot: {fileID: 0}
-  attackCooldown: 1
->>>>>>> b7297a032c9fd61a7ee86b30151ccb4112886809
 --- !u!114 &1262471703 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 135756642000475821, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
