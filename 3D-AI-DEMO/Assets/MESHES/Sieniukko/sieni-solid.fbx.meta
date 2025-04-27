@@ -31,11 +31,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Armature|jump (1)
-      takeName: Armature|jump
+      name: Armature|attack (1)
+      takeName: Armature|attack
       internalID: 4781951162920444690
       firstFrame: 0
-      lastFrame: 30
+      lastFrame: 45
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -70,8 +70,8 @@ ModelImporter:
       name: Armature|attack
       takeName: Armature|attack
       internalID: -251351218608039746
-      firstFrame: 0
-      lastFrame: 40
+      firstFrame: 4
+      lastFrame: 45
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

@@ -7,7 +7,7 @@ public class AttackScript : MonoBehaviour
     public StarterAssets.StarterAssetsInputs input;
     public GameObject slash;
     public Transform attackPoint;
-    public float attackCooldown = 0.1f;
+    public float attackCooldown = 0f;
     private bool attacking = false;
     private Animator animator;
     private bool _hasAnimator;
@@ -40,7 +40,7 @@ public class AttackScript : MonoBehaviour
         
         Vector3 effectPosition = attackPoint.position;
         Quaternion effectRotation = transform.rotation;
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.4f);
         GameObject effect = Instantiate(slash, effectPosition, effectRotation);
         Destroy(effect, 1.0f);
 
