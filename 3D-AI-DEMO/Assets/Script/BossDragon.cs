@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class BossDragon : MonoBehaviour
+public class BossDragon : MonoBehaviour, IDamageable
 {
     public GameObject fireballPrefab;
     public float health = 3f;
@@ -17,12 +17,12 @@ public class BossDragon : MonoBehaviour
     private int currentPathIndex = 0;
     public float speed = 10f;
     private Vector3 velocity = Vector3.zero;
-    private float originalY;
     public float rotationSpeed = 2f;
     public float heightVariation = 1.5f;
     public float bobbingSpeed = 1f;
     public float bankingAmount = 20f;
     private bool attackSpot = false;
+    private DissolveController dissolveController;
 
 
 
@@ -31,7 +31,6 @@ public class BossDragon : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         if (pathPoints.Length == 0) return;
-        originalY = transform.position.y;
     }
 
     void Update()
@@ -61,12 +60,21 @@ public class BossDragon : MonoBehaviour
     {
         if (chargingFireball != null) return; // Already charging
 
-
         chargingFireball = Instantiate(fireballPrefab, fireballSpawn.position, Quaternion.identity);
         chargingFireball.transform.SetParent(fireballSpawn, worldPositionStays: true); // Attach to bone
 
+        // Disable collider and FireDamage script while charging
+        Collider fireballCollider = chargingFireball.GetComponent<Collider>();
+        if (fireballCollider != null)
+            fireballCollider.enabled = false;
+
+        FireDamage fireDamage = chargingFireball.GetComponent<FireDamage>();
+        if (fireDamage != null)
+            fireDamage.enabled = false;
+
         StartCoroutine(GrowFireball(chargingFireball.transform));
     }
+
 
     IEnumerator GrowFireball(Transform fireball)
     {
@@ -86,23 +94,50 @@ public class BossDragon : MonoBehaviour
 
     // Called from animation event to launch the fireball toward the player
     public void LaunchFireball()
-    {
-        if (chargingFireball == null) return;
+{
+    if (chargingFireball == null) return;
 
+    chargingFireball.transform.SetParent(null); // Detach from dragon
 
-        chargingFireball.transform.SetParent(null); // Detach from dragon
+    // Enable collider and FireDamage script now
+    Collider fireballCollider = chargingFireball.GetComponent<Collider>();
+    if (fireballCollider != null)
+        fireballCollider.enabled = true;
 
-        shootDirection = (player.position - chargingFireball.transform.position).normalized;
-        chargingFireball.AddComponent<FireballMover>().Initialize(shootDirection, 20f);
+    FireDamage fireDamage = chargingFireball.GetComponent<FireDamage>();
+    if (fireDamage != null)
+        fireDamage.enabled = true;
 
-        chargingFireball = null; // Clear reference
-        animator.SetBool("Attack", false);
-        isAttacking = false;
-        attackSpot = false;
+    shootDirection = (player.position - chargingFireball.transform.position).normalized;
+    chargingFireball.AddComponent<FireballMover>().Initialize(shootDirection, 20f);
 
-        // FORCE MOVE TO NEXT PATH POINT
-        currentPathIndex = (currentPathIndex + 1) % pathPoints.Length;
-    }
+    chargingFireball = null; // Clear reference
+    animator.SetBool("Attack", false); // Stop the attack animation immediately
+
+    // Start the coroutine to wait 5 seconds before allowing the dragon to move again
+    StartCoroutine(WaitAfterAttack());
+
+    // Do not reset attack state immediately
+    // isAttacking = false;
+    // attackSpot = false;
+
+    // currentPathIndex = (currentPathIndex + 1) % pathPoints.Length; // You can leave this as is or change it based on behavior
+}
+
+private IEnumerator WaitAfterAttack()
+{
+    // Wait for 5 seconds
+    yield return new WaitForSeconds(7f);
+
+    // After 5 seconds, reset attack state and continue moving the dragon
+    isAttacking = false;
+    attackSpot = false;
+
+    // Move to the next path if needed (uncomment if necessary)
+    currentPathIndex = (currentPathIndex + 1) % pathPoints.Length;
+
+    // You can also include any other behavior after the delay, e.g., make the dragon fly to the next point
+}
 
 
 
@@ -161,6 +196,26 @@ public class BossDragon : MonoBehaviour
     }
 }
 
+    public void TakeDamage(float amount)
+    {
+        health -= health;
+        if (health == 0)
+        {
+            Die();
+        }
+    }
 
 
+    public void Die()
+    {
+        hasAggro = false;
+        if (dissolveController != null)
+        {
+            dissolveController.StartDissolve();
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 }

@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 using System.Collections;
 
 public class AttackScript : MonoBehaviour
@@ -7,6 +6,7 @@ public class AttackScript : MonoBehaviour
     public StarterAssets.StarterAssetsInputs input;
     public GameObject slash;
     public Transform attackPoint;
+    public Transform dragonSpot;
     public float attackCooldown = 0.1f;
     private bool attacking = false;
     private Animator animator;
@@ -23,13 +23,11 @@ public class AttackScript : MonoBehaviour
     { 
         if (input.attack && !attacking)
         {
-            //StartAttack();
             StartCoroutine(StartAttack());
             input.attack = false;
         }
     }
 
-    //void StartAttack()
     IEnumerator StartAttack()
     {
         attacking = true;
@@ -37,22 +35,34 @@ public class AttackScript : MonoBehaviour
         {
             animator.SetBool(_animIDisAttacking, attacking);
         }
-        
+
         Vector3 effectPosition = attackPoint.position;
         Quaternion effectRotation = transform.rotation;
-        yield return new WaitForSeconds(0.3f);
+
+        yield return new WaitForSeconds(0.3f); // wait before slash effect appears
+
         GameObject effect = Instantiate(slash, effectPosition, effectRotation);
         Destroy(effect, 1.0f);
 
-        Collider[] hitEnemies = Physics.OverlapSphere(attackPoint.position, 1f);
-        foreach (Collider enemy in hitEnemies)
+        Collider[] hitObjects = Physics.OverlapSphere(attackPoint.position, 2f);
+        foreach (Collider hit in hitObjects)
         {
-            if (enemy.CompareTag("Enemy"))
+            if (hit.CompareTag("Enemy"))
             {
-                if (enemy.TryGetComponent<IDamageable>(out var target))
+                if (hit.TryGetComponent<IDamageable>(out var target))
                 {
                     Debug.Log("Enemy took damage!");
                     target.TakeDamage(1f);
+                }
+            }
+            else if (hit.CompareTag("FIREBALL")) // ✨ Reflect fireballs
+            {
+                if (hit.TryGetComponent<FireballMover>(out var fireball))
+                {
+                    Debug.Log("Fireball reflected!");
+                    Vector3 reflectDirection = (fireball.transform.position - transform.position).normalized;
+                    Transform dragon = FindObjectOfType<BossDragon>().transform;
+                    fireball.Reflect(reflectDirection, dragon);
                 }
             }
         }
@@ -63,6 +73,9 @@ public class AttackScript : MonoBehaviour
     void ResetAttack()
     {
         attacking = false;
-        animator.SetBool(_animIDisAttacking, attacking);
+        if (_hasAnimator)
+        {
+            animator.SetBool(_animIDisAttacking, attacking);
+        }
     }
 }
