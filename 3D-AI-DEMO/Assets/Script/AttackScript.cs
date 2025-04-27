@@ -43,7 +43,7 @@ public class AttackScript : MonoBehaviour
         GameObject effect = Instantiate(slash, effectPosition, effectRotation);
         Destroy(effect, 1.0f);
 
-        Collider[] hitObjects = Physics.OverlapSphere(attackPoint.position, 2f);
+        Collider[] hitObjects = Physics.OverlapSphere(attackPoint.position, 3f);
         foreach (Collider hit in hitObjects)
         {
             if (hit.CompareTag("Enemy"))
@@ -59,7 +59,7 @@ public class AttackScript : MonoBehaviour
                 if (hit.TryGetComponent<FireballMover>(out var fireball))
                 {
                     Debug.Log("Fireball reflected!");
-                    Vector3 reflectDirection = (fireball.transform.position - transform.position).normalized;
+                    Vector3 reflectDirection =  (dragonSpot.position - hit.transform.position).normalized;
                     Transform dragon = FindObjectOfType<BossDragon>().transform;
                     fireball.Reflect(reflectDirection, dragon);
                 }

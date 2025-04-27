@@ -185,16 +185,33 @@ private IEnumerator WaitAfterAttack()
 
 
     private void LookAtPlayer()
-{
-    Vector3 directionToPlayer = (player.position - transform.position).normalized;
-    directionToPlayer.y = 0; // Keep dragon level
-
-    if (directionToPlayer != Vector3.zero)
     {
-        Quaternion lookRotation = Quaternion.LookRotation(directionToPlayer);
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, rotationSpeed * 2f * Time.deltaTime); // faster turn when attacking
+        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+        directionToPlayer.y = 0; // Keep dragon level
+
+        if (directionToPlayer != Vector3.zero)
+        {
+            Quaternion lookRotation = Quaternion.LookRotation(directionToPlayer);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, rotationSpeed * 2f * Time.deltaTime); // faster turn when attacking
+        }
     }
-}
+
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Check if the dragon's collider is hit by a fireball
+        if (collision.collider.CompareTag("FIREBALL"))
+        {
+            FireballMover fireball = collision.collider.GetComponent<FireballMover>();
+            if (fireball != null)
+            {
+                Debug.Log("selvisimme taking damagen sisälle");
+                TakeDamage(1f); // Assume fireball has a 'damage' property
+                Destroy(collision.gameObject); // Destroy the fireball after it hits
+            }
+        }
+    }
+
 
     public void TakeDamage(float amount)
     {
