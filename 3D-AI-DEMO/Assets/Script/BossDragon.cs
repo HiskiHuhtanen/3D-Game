@@ -23,6 +23,8 @@ public class BossDragon : MonoBehaviour, IDamageable
     public float bankingAmount = 20f;
     private bool attackSpot = false;
     private DissolveController dissolveController;
+    public AudioSource sfxSource;
+    public AudioClip deathSound;
 
 
 
@@ -30,6 +32,7 @@ public class BossDragon : MonoBehaviour, IDamageable
     void Start()
     {
         animator = GetComponent<Animator>();
+        dissolveController = GetComponentInChildren<DissolveController>();
         if (pathPoints.Length == 0) return;
     }
 
@@ -93,7 +96,7 @@ public class BossDragon : MonoBehaviour, IDamageable
     }
 
     // Called from animation event to launch the fireball toward the player
-    public void LaunchFireball()
+public void LaunchFireball()
 {
     if (chargingFireball == null) return;
 
@@ -109,20 +112,17 @@ public class BossDragon : MonoBehaviour, IDamageable
         fireDamage.enabled = true;
 
     shootDirection = (player.position - chargingFireball.transform.position).normalized;
-    chargingFireball.AddComponent<FireballMover>().Initialize(shootDirection, 20f);
+
+    FireballMover fireballMover = chargingFireball.AddComponent<FireballMover>();
+    fireballMover.Initialize(shootDirection, 20f);
+    fireballMover.SetBossDragon(this); // <<< this assigns the boss reference safely
 
     chargingFireball = null; // Clear reference
     animator.SetBool("Attack", false); // Stop the attack animation immediately
 
-    // Start the coroutine to wait 5 seconds before allowing the dragon to move again
     StartCoroutine(WaitAfterAttack());
-
-    // Do not reset attack state immediately
-    // isAttacking = false;
-    // attackSpot = false;
-
-    // currentPathIndex = (currentPathIndex + 1) % pathPoints.Length; // You can leave this as is or change it based on behavior
 }
+
 
 private IEnumerator WaitAfterAttack()
 {
@@ -197,30 +197,35 @@ private IEnumerator WaitAfterAttack()
     }
 
 
-    private void OnCollisionEnter(Collision collision)
+
+    private void OnTriggerEnter(Collider other)
     {
-        // Check if the dragon's collider is hit by a fireball
-        if (collision.collider.CompareTag("FIREBALL"))
+        if (other.CompareTag("FIREBALL"))
         {
-            FireballMover fireball = collision.collider.GetComponent<FireballMover>();
+            FireballMover fireball = other.GetComponent<FireballMover>();
             if (fireball != null)
             {
-                Debug.Log("selvisimme taking damagen sisälle");
-                TakeDamage(1f); // Assume fireball has a 'damage' property
-                Destroy(collision.gameObject); // Destroy the fireball after it hits
+                Debug.Log("Fireball hit dragon, taking damage!");
+                TakeDamage(1f); 
+                Destroy(other.gameObject); 
             }
         }
     }
 
 
+
     public void TakeDamage(float amount)
     {
-        health -= health;
-        if (health == 0)
+        health -= amount;
+        Debug.Log($"Dragon took {amount} damage. Remaining health: {health}");
+
+        if (health <= 0)
         {
+            PlaySound(deathSound);
             Die();
         }
     }
+
 
 
     public void Die()
@@ -234,5 +239,10 @@ private IEnumerator WaitAfterAttack()
         {
             Destroy(gameObject);
         }
+    }
+
+     private void PlaySound(AudioClip clip)
+    {
+        sfxSource.PlayOneShot(clip);
     }
 }

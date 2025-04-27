@@ -10,13 +10,15 @@ using UnityEngine.AI;
 
 public class EliteAI : MonoBehaviour, IDamageable
 {
+    [SerializeField] private HealthBar healthBar;
     public Transform player;
     public GameObject fire;
     public GameObject warningLine;
     public GameObject explosion;
     public BossDragon bossDragon;
     public AudioClip deathSound;
-    public float health = 1f;
+    public float health = 50f;
+    public float maxHealth = 50f;
     public AudioClip idleLoopSound;
     public AudioClip stepSound1;
     public AudioClip stepSound2;
@@ -50,6 +52,7 @@ public class EliteAI : MonoBehaviour, IDamageable
         agent = GetComponent<NavMeshAgent>();
         agent.enabled = false;
         animator = GetComponent<Animator>();
+        healthBar?.SetHealth(health, maxHealth);
 
         if (idleLoopSource && idleLoopSound)
         {
@@ -319,6 +322,7 @@ public class EliteAI : MonoBehaviour, IDamageable
     public void TakeDamage(float damage)
     {
         health -= damage;
+        healthBar?.SetHealth(health, maxHealth);
         if (health <= 0)
         {
             Die();
