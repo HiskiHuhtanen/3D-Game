@@ -23,6 +23,8 @@ public class EliteAI : MonoBehaviour, IDamageable
     public AudioClip punchSound;
     public AudioClip fireAttackSound;
     public AudioClip spinAttackSound;
+    public AudioClip dash1;
+    public AudioClip dash2;
     public AudioSource idleLoopSource;
     public AudioSource sfxSource;
 
@@ -111,24 +113,44 @@ public class EliteAI : MonoBehaviour, IDamageable
         canPunch = false;
 
         animator.SetBool("isDashing", true);
-        PlaySound(punchSound);
+        //PlaySound(punchSound);
         yield return new WaitForSeconds(0.3f);
 
         Vector3 firstDashDirection = (transform.forward + transform.right).normalized;
-        Vector3 firstDashPosition = transform.position + firstDashDirection * 6f; 
+        Vector3 firstDashPosition = transform.position + firstDashDirection * 6f;
+        PlaySound(dash1);
         yield return MoveToward(firstDashPosition, 20f);
 
         Vector3 directionToPlayer = (player.transform.position - firstDashPosition).normalized;
         Vector3 secondDashPosition = player.transform.position + directionToPlayer * -2f;
         //transform.position = secondDashPosition;
         //yield return new WaitForSeconds(0.5f);
+        PlaySound(dash2);
         yield return MoveToward(secondDashPosition, 25f);
+        
+        Vector3 lookDir = (player.position - transform.position).normalized;
+        lookDir.y = 0; // flatten to horizontal only
+        if (lookDir != Vector3.zero)
+            transform.rotation = Quaternion.LookRotation(lookDir);
 
         animator.SetBool("isDashing", false);
         animator.SetBool("isPunching", true);
+        PlaySound(dash1);
         agent.isStopped = true; 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1f);
 
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position + transform.forward * 1.5f, 2f);
+            foreach (var hit in hitColliders)
+            {
+                if (hit.transform == player)
+                {
+                    Player playerScript = player.GetComponent<Player>();
+                    if (playerScript != null)
+                    {
+                        playerScript.TakeDamage(1f);
+                    }
+                }
+            }
         animator.SetBool("isPunching", false);
 
         agent.isStopped = false;
