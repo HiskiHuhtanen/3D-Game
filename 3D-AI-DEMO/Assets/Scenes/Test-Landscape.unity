@@ -34145,13 +34145,8 @@ MonoBehaviour:
   input: {fileID: 1262471703}
   slash: {fileID: 1610206513}
   attackPoint: {fileID: 191470924}
-<<<<<<< Updated upstream
-  attackCooldown: 0
-  dragonSpot: {fileID: 0}
-=======
   dragonSpot: {fileID: 1142372153}
   attackCooldown: 0
->>>>>>> Stashed changes
 --- !u!114 &1262471703 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 135756642000475821, guid: 64dce48905ffd9b4293e595fa6941544, type: 3}
