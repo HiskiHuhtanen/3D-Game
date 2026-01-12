@@ -10,9 +10,7 @@ Features:
 
 🎨 Interactive Shaders – Environment and character shaders react dynamically to gameplay elements.
 
-🗺️ Hand-crafted Environment – Custom 3D assets and level layout for a cohesive aesthetic.
-
-🎵 Atmospheric audio and VFX to enhance immersion.
+🗺️ Hand-crafted Environment – Custom 3D assets and level layout
 
 All models were hand made in Blender. Textures were made in Adobe Substance Painter.
 
